@@ -5,7 +5,7 @@
  * Description: A modern WordPress plugin for collaborative travel journaling
  * Version: 1.0.0
  * Requires at least: 6.4
- * Requires PHP: 8.3
+ * Requires PHP: 8.2
  * Author: Aaron Collegeman
  * Author URI: https://github.com/collegeman
  * License: GPL v2 or later

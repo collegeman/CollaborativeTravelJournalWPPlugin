@@ -18,10 +18,10 @@ final class Activator {
     }
 
     private static function checkRequirements(): void {
-        if (version_compare(PHP_VERSION, '8.3', '<')) {
+        if (version_compare(PHP_VERSION, '8.2', '<')) {
             deactivate_plugins(CTJ_PLUGIN_BASENAME);
             wp_die(
-                esc_html__('This plugin requires PHP 8.3 or higher.', 'collaborative-travel-journal'),
+                esc_html__('This plugin requires PHP 8.2 or higher.', 'collaborative-travel-journal'),
                 esc_html__('Plugin Activation Error', 'collaborative-travel-journal'),
                 ['back_link' => true]
             );
