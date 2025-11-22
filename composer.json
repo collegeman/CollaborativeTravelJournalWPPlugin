@@ -1,0 +1,62 @@
+{
+    "name": "collegeman/collaborative-travel-journal-wp-plugin",
+    "description": "A modern WordPress plugin for collaborative travel journaling",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Aaron Collegeman",
+            "email": "aaroncollegeman@gmail.com"
+        }
+    ],
+    "homepage": "https://github.com/collegeman/collaborative-travel-journal-wp-plugin",
+    "support": {
+        "issues": "https://github.com/collegeman/collaborative-travel-journal-wp-plugin/issues",
+        "source": "https://github.com/collegeman/collaborative-travel-journal-wp-plugin"
+    },
+    "require": {
+        "php": ">=8.3"
+    },
+    "require-dev": {
+        "coenjacobs/mozart": "^0.7",
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Collegeman\\CollaborativeTravelJournal\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Collegeman\\CollaborativeTravelJournal\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "@prefix-dependencies"
+        ],
+        "post-update-cmd": [
+            "@prefix-dependencies"
+        ],
+        "prefix-dependencies": [
+            "\"vendor/bin/mozart\" compose"
+        ]
+    },
+    "extra": {
+        "mozart": {
+            "dep_namespace": "Collegeman\\CollaborativeTravelJournal\\Vendor\\",
+            "dep_directory": "/src/Vendor/",
+            "classmap_directory": "/classes/dependencies/",
+            "classmap_prefix": "Collegeman_CTJ_",
+            "packages": [],
+            "delete_vendor_directories": true
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true,
+        "allow-plugins": {
+            "composer/installers": true
+        }
+    }
+}

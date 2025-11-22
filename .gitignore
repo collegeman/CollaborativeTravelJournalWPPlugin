@@ -1,0 +1,31 @@
+# Composer
+/vendor/
+composer.lock
+
+# Mozart scoped dependencies
+/src/Vendor/
+/classes/dependencies/
+
+# IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+
+# Node (if you add any build tools later)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# WordPress
+wp-config.php
+wp-content/uploads/
+wp-content/blogs.dir/
+wp-content/upgrade/
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
