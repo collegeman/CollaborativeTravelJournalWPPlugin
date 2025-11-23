@@ -35,6 +35,55 @@ final class Stop {
             'hierarchical' => false,
             'supports' => ['title', 'editor', 'author', 'thumbnail', 'custom-fields'],
             'show_in_rest' => true,
+            'rest_base' => 'stops',
         ]);
+
+        self::register_meta_fields();
+    }
+
+    private static function register_meta_fields(): void {
+        $meta_fields = [
+            'trip_id' => [
+                'type' => 'integer',
+                'description' => 'Associated trip ID',
+            ],
+            'place_id' => [
+                'type' => 'string',
+                'description' => 'Google Place ID',
+            ],
+            'formatted_address' => [
+                'type' => 'string',
+                'description' => 'Formatted address',
+            ],
+            'latitude' => [
+                'type' => 'number',
+                'description' => 'Latitude coordinate',
+            ],
+            'longitude' => [
+                'type' => 'number',
+                'description' => 'Longitude coordinate',
+            ],
+            'date' => [
+                'type' => 'string',
+                'description' => 'Date of stop',
+            ],
+            'time' => [
+                'type' => 'string',
+                'description' => 'Time of stop (optional)',
+            ],
+            'specify_time' => [
+                'type' => 'boolean',
+                'description' => 'Whether time was explicitly specified',
+            ],
+        ];
+
+        foreach ($meta_fields as $key => $args) {
+            register_post_meta(self::POST_TYPE, $key, [
+                'type' => $args['type'],
+                'description' => $args['description'],
+                'single' => true,
+                'show_in_rest' => true,
+            ]);
+        }
     }
 }

@@ -50,6 +50,7 @@
     </ion-fab>
 
     <TripSettingsModal :is-open="settingsOpen" @close="closeSettings" />
+    <CreateStopModal :is-open="createStopOpen" @close="closeCreateStop" />
   </ion-page>
 </template>
 
@@ -72,9 +73,11 @@ import { ellipsisHorizontalOutline, add, newspaper, images, locationOutline, mus
 import { ref, onMounted, watch, nextTick } from 'vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
 import TripSettingsModal from '../components/TripSettingsModal.vue';
+import CreateStopModal from '../components/CreateStopModal.vue';
 
 const { currentTrip } = useCurrentTrip();
 const settingsOpen = ref(false);
+const createStopOpen = ref(false);
 const mapElement = ref<HTMLElement | null>(null);
 let map: google.maps.Map | null = null;
 let googleMapsLoaded = false;
@@ -112,9 +115,7 @@ async function loadGoogleMaps(apiKey: string): Promise<void> {
     };
 
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}`;
-    script.async = true;
-    script.defer = true;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}&loading=async`;
 
     script.onerror = () => {
       delete (window as any)[callbackName];
@@ -145,16 +146,37 @@ async function initMap() {
     // Load Google Maps script
     await loadGoogleMaps(apiKey);
 
-    // Default center (San Francisco)
-    const center = { lat: 37.7749, lng: -122.4194 };
+    // Default center (San Francisco) - used as fallback
+    let center = { lat: 37.7749, lng: -122.4194 };
+    let zoom = 8;
+
+    // Try to get user's current location
+    if (navigator.geolocation) {
+      try {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject);
+        });
+        center = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+        zoom = 12; // Closer zoom when using user location
+        console.log('Using user location:', center);
+      } catch (error) {
+        console.log('Could not get user location, using default:', error);
+      }
+    }
 
     console.log('Creating map instance...');
     map = new google.maps.Map(mapElement.value, {
       center: center,
-      zoom: 8,
+      zoom: zoom,
+      disableDefaultUI: true,
       mapTypeControl: true,
-      streetViewControl: false,
-      fullscreenControl: false,
+      mapTypeControlOptions: {
+        style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+        position: google.maps.ControlPosition.TOP_LEFT,
+      },
     });
     console.log('Map created successfully');
   } catch (error) {
@@ -181,8 +203,11 @@ function addMedia() {
 }
 
 function addStop() {
-  console.log('Add stop');
-  // TODO: Navigate to add stop page
+  createStopOpen.value = true;
+}
+
+function closeCreateStop() {
+  createStopOpen.value = false;
 }
 
 function addSong() {
@@ -224,11 +249,39 @@ ion-toolbar ion-menu-button {
   height: 100%;
 }
 
+/* Google Maps control styling */
+.map :deep(.gm-style button) {
+  font-size: 14px !important;
+}
+
+.map :deep(.gm-style-mtc) {
+  font-size: 13px !important;
+}
+
+.map :deep(.gm-style-mtc *) {
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+}
+
+.map :deep(.gm-style-mtc > div) {
+  padding: 6px 12px !important;
+}
+
+.map :deep(.gm-style-mtc label) {
+  font-size: 13px !important;
+}
+
 .empty-state {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100%;
   color: var(--ion-color-medium);
+}
+
+@media (orientation: landscape) {
+  ion-header {
+    display: none;
+  }
 }
 </style>

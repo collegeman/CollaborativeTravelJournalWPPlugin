@@ -51,6 +51,7 @@
     </ion-fab>
 
     <TripSettingsModal :is-open="settingsOpen" @close="closeSettings" />
+    <CreateStopModal :is-open="createStopOpen" @close="closeCreateStop" />
   </ion-page>
 </template>
 
@@ -73,9 +74,11 @@ import { ellipsisHorizontalOutline, add, newspaper, images, locationOutline, mus
 import { ref } from 'vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
 import TripSettingsModal from '../components/TripSettingsModal.vue';
+import CreateStopModal from '../components/CreateStopModal.vue';
 
 const { currentTrip } = useCurrentTrip();
 const settingsOpen = ref(false);
+const createStopOpen = ref(false);
 
 function openSettings() {
   settingsOpen.value = true;
@@ -96,8 +99,11 @@ function addMedia() {
 }
 
 function addStop() {
-  console.log('Add stop');
-  // TODO: Navigate to add stop page
+  createStopOpen.value = true;
+}
+
+function closeCreateStop() {
+  createStopOpen.value = false;
 }
 
 function addSong() {
@@ -148,5 +154,11 @@ h1 {
   justify-content: center;
   height: 100%;
   color: var(--ion-color-medium);
+}
+
+@media (orientation: landscape) {
+  ion-header {
+    display: none;
+  }
 }
 </style>

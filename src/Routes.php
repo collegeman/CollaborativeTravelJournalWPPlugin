@@ -26,6 +26,14 @@ final class Routes {
 
     public static function handleTemplate(string $template): string {
         if (get_query_var('ctj_app')) {
+            // Require user to be logged in
+            if (!is_user_logged_in()) {
+                $redirect_to = home_url('/journal');
+                $login_url = wp_login_url($redirect_to);
+                wp_redirect($login_url);
+                exit;
+            }
+
             $app_template = CTJ_PLUGIN_DIR . 'templates/app.php';
 
             if (file_exists($app_template)) {

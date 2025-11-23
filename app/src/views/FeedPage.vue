@@ -17,14 +17,36 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content :fullscreen="true" class="ion-padding">
-      <div v-if="currentTrip">
-        <h1>{{ currentTrip.title.rendered }}</h1>
-        <p v-if="currentTrip.content?.rendered" v-html="currentTrip.content.rendered"></p>
-        <p v-else class="no-content">No description yet.</p>
-      </div>
-      <div v-else class="empty-state">
+    <ion-content :fullscreen="true">
+      <div v-if="!currentTrip" class="empty-state">
         <p>No trip selected</p>
+      </div>
+      <div v-else class="stops-list">
+        <div v-if="loading" class="loading-state">
+          <ion-spinner></ion-spinner>
+          <p>Loading stops...</p>
+        </div>
+
+        <div v-else-if="error" class="error-state">
+          <p>{{ error }}</p>
+          <ion-button @click="loadStops">Retry</ion-button>
+        </div>
+
+        <template v-else>
+          <ion-card v-for="stop in stops" :key="stop.id" class="stop-card">
+            <ion-card-header>
+              <ion-card-title>{{ stop.title.rendered }}</ion-card-title>
+              <ion-card-subtitle>{{ formatDate(stop.meta.date, stop.meta.time, stop.meta.specify_time) }}</ion-card-subtitle>
+            </ion-card-header>
+            <ion-card-content v-if="stop.meta.formatted_address">
+              {{ stop.meta.formatted_address }}
+            </ion-card-content>
+          </ion-card>
+
+          <div v-if="stops.length === 0" class="no-stops">
+            <p>No stops yet. Add your first stop to begin your journey!</p>
+          </div>
+        </template>
       </div>
     </ion-content>
 
@@ -52,6 +74,7 @@
     </ion-fab>
 
     <TripSettingsModal :is-open="settingsOpen" @close="closeSettings" />
+    <CreateStopModal :is-open="createStopOpen" @close="closeCreateStop" @stop-created="handleStopCreated" />
   </ion-page>
 </template>
 
@@ -68,15 +91,73 @@ import {
   IonMenuButton,
   IonFab,
   IonFabButton,
-  IonFabList
+  IonFabList,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardSubtitle,
+  IonCardContent,
+  IonSpinner
 } from '@ionic/vue';
 import { ellipsisHorizontalOutline, add, newspaper, images, locationOutline, musicalNotes, person } from 'ionicons/icons';
-import { ref } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
 import TripSettingsModal from '../components/TripSettingsModal.vue';
+import CreateStopModal from '../components/CreateStopModal.vue';
+import { getStopsByTrip, type Stop as ApiStop } from '../services/stops';
 
 const { currentTrip } = useCurrentTrip();
 const settingsOpen = ref(false);
+const createStopOpen = ref(false);
+const stops = ref<ApiStop[]>([]);
+const loading = ref(false);
+const error = ref<string | null>(null);
+
+async function loadStops() {
+  if (!currentTrip.value) {
+    stops.value = [];
+    return;
+  }
+
+  try {
+    loading.value = true;
+    error.value = null;
+    stops.value = await getStopsByTrip(currentTrip.value.id);
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Failed to load stops';
+    console.error('Error loading stops:', e);
+  } finally {
+    loading.value = false;
+  }
+}
+
+function formatDate(dateString: string, timeString?: string, specifyTime?: boolean): string {
+  const date = new Date(dateString);
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  };
+
+  if (specifyTime && timeString) {
+    options.hour = 'numeric';
+    options.minute = '2-digit';
+    const [hours, minutes] = timeString.split(':');
+    date.setHours(parseInt(hours), parseInt(minutes));
+  }
+
+  return date.toLocaleDateString('en-US', options);
+}
+
+// Load stops when component mounts or when trip changes
+onMounted(() => {
+  loadStops();
+});
+
+watch(currentTrip, () => {
+  loadStops();
+});
 
 function openSettings() {
   settingsOpen.value = true;
@@ -97,8 +178,15 @@ function addMedia() {
 }
 
 function addStop() {
-  console.log('Add stop');
-  // TODO: Navigate to add stop page
+  createStopOpen.value = true;
+}
+
+function closeCreateStop() {
+  createStopOpen.value = false;
+}
+
+function handleStopCreated() {
+  loadStops();
 }
 
 function addSong() {
@@ -134,20 +222,53 @@ ion-content {
   --background: #faf8f5;
 }
 
-h1 {
-  margin-bottom: 20px;
+.stops-list {
+  padding: 16px 0;
 }
 
-.no-content {
+.stop-card {
+  margin: 0 0 16px 0;
+  border-radius: 0;
+}
+
+.stop-card:last-of-type {
+  margin-bottom: 80px; /* Add space for FAB */
+}
+
+.no-stops {
+  padding: 40px 16px;
+  text-align: center;
   color: var(--ion-color-medium);
   font-style: italic;
 }
 
+.loading-state,
+.error-state,
 .empty-state {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
+  padding: 40px 16px;
+  text-align: center;
   color: var(--ion-color-medium);
+}
+
+.loading-state {
+  gap: 16px;
+}
+
+.error-state {
+  gap: 16px;
+}
+
+.empty-state {
+  height: 100%;
+}
+
+@media (orientation: landscape) {
+  ion-header {
+    display: none;
+  }
 }
 </style>
