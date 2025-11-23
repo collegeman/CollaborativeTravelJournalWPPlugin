@@ -37,7 +37,7 @@ import TripMenu from '../components/TripMenu.vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
 
 const router = useRouter();
-const { currentTrip, trips, setCurrentTrip, setTrips } = useCurrentTrip();
+const { currentTrip, trips, setCurrentTrip, setTrips, restoreSavedTrip } = useCurrentTrip();
 
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -45,12 +45,17 @@ const error = ref<string | null>(null);
 onMounted(async () => {
   await fetchTrips();
 
-  // Redirect to create trip if no trips exist
   if (trips.value.length === 0 && !error.value) {
     router.replace('/trip/create');
-  } else if (trips.value.length > 0 && !currentTrip.value) {
-    // Set the first trip as current if none is selected
-    setCurrentTrip(trips.value[0]);
+    return;
+  }
+
+  if (trips.value.length > 0) {
+    restoreSavedTrip();
+
+    if (!currentTrip.value) {
+      setCurrentTrip(trips.value[0]);
+    }
   }
 });
 

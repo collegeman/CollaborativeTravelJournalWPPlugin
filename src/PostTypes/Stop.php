@@ -39,6 +39,9 @@ final class Stop {
         ]);
 
         self::register_meta_fields();
+        self::register_rest_query_params();
+
+        add_filter('rest_ctj_stop_query', [__CLASS__, 'filterRestQuery'], 10, 2);
     }
 
     private static function register_meta_fields(): void {
@@ -85,5 +88,30 @@ final class Stop {
                 'show_in_rest' => true,
             ]);
         }
+    }
+
+    private static function register_rest_query_params(): void {
+        add_filter('rest_ctj_stop_collection_params', function($params) {
+            $params['trip_id'] = [
+                'description' => 'Filter stops by trip ID',
+                'type' => 'integer',
+                'sanitize_callback' => 'absint',
+            ];
+            return $params;
+        });
+    }
+
+    public static function filterRestQuery($args, $request) {
+        if (isset($request['trip_id'])) {
+            $args['meta_query'] = [
+                [
+                    'key' => 'trip_id',
+                    'value' => $request['trip_id'],
+                    'compare' => '='
+                ]
+            ];
+        }
+
+        return $args;
     }
 }

@@ -29,7 +29,7 @@ export interface Stop {
 }
 
 export async function getStopsByTrip(tripId: number): Promise<Stop[]> {
-  return apiGet<Stop[]>(`/stops?meta_key=trip_id&meta_value=${tripId}&per_page=100`);
+  return apiGet<Stop[]>(`/stops?trip_id=${tripId}&per_page=100`);
 }
 
 export async function createStop(stopData: StopData): Promise<Stop> {

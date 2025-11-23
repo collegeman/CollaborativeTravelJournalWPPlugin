@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 export interface Trip {
   id: number;
@@ -10,8 +10,18 @@ export interface Trip {
   };
 }
 
+const STORAGE_KEY = 'ctj_current_trip_id';
+
 const currentTrip = ref<Trip | null>(null);
 const trips = ref<Trip[]>([]);
+
+watch(currentTrip, (trip) => {
+  if (trip) {
+    localStorage.setItem(STORAGE_KEY, trip.id.toString());
+  } else {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+});
 
 export function useCurrentTrip() {
   function setCurrentTrip(trip: Trip | null) {
@@ -34,6 +44,20 @@ export function useCurrentTrip() {
     return trips.value;
   }
 
+  function restoreSavedTrip() {
+    const savedTripId = localStorage.getItem(STORAGE_KEY);
+    if (!savedTripId) {
+      return;
+    }
+
+    const trip = trips.value.find(t => t.id === parseInt(savedTripId));
+    if (trip) {
+      currentTrip.value = trip;
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }
+
   return {
     currentTrip,
     trips,
@@ -41,6 +65,7 @@ export function useCurrentTrip() {
     getCurrentTrip,
     setTrips,
     addTrip,
-    getTrips
+    getTrips,
+    restoreSavedTrip
   };
 }
