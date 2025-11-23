@@ -9,10 +9,10 @@
             "email": "aaroncollegeman@gmail.com"
         }
     ],
-    "homepage": "https://github.com/collegeman/collaborative-travel-journal-wp-plugin",
+    "homepage": "https://github.com/collegeman/CollaborativeTravelJournalWPPlugin",
     "support": {
-        "issues": "https://github.com/collegeman/collaborative-travel-journal-wp-plugin/issues",
-        "source": "https://github.com/collegeman/collaborative-travel-journal-wp-plugin"
+        "issues": "https://github.com/collegeman/CollaborativeTravelJournalWPPlugin/issues",
+        "source": "https://github.com/collegeman/CollaborativeTravelJournalWPPlugin"
     },
     "require": {
         "php": ">=8.2"

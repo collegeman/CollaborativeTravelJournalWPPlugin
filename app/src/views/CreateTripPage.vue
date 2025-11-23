@@ -2,14 +2,22 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
-        <ion-title>Create Your First Trip</ion-title>
+        <ion-title>Create Trip</ion-title>
+        <ion-buttons slot="end">
+          <ion-button @click="handleCancel" :disabled="creating">
+            <ion-icon slot="icon-only" :icon="close"></ion-icon>
+          </ion-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
     <ion-content class="ion-padding">
       <div class="create-trip-container">
-        <h1>Start Your Journey</h1>
-        <p>Create your first trip to begin documenting your travels.</p>
+        <div class="icon-container">
+          <ion-icon :icon="locationOutline" class="page-icon"></ion-icon>
+        </div>
+        <h1>Start Here.</h1>
+        <p>Create a trip to begin documenting your travels.</p>
 
         <form @submit.prevent="handleSubmit">
           <ion-list>
@@ -43,15 +51,6 @@
               <ion-spinner v-if="creating" slot="start"></ion-spinner>
               {{ creating ? 'Creating...' : 'Create Trip' }}
             </ion-button>
-
-            <ion-button
-              expand="block"
-              fill="outline"
-              @click="handleCancel"
-              :disabled="creating"
-            >
-              Cancel
-            </ion-button>
           </div>
         </form>
 
@@ -80,12 +79,15 @@ import {
   IonInput,
   IonTextarea,
   IonButton,
+  IonButtons,
+  IonIcon,
   IonSpinner,
   IonCard,
   IonCardHeader,
   IonCardTitle,
   IonCardContent
 } from '@ionic/vue';
+import { close, locationOutline } from 'ionicons/icons';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
@@ -150,10 +152,33 @@ function handleCancel() {
 </script>
 
 <style scoped>
+ion-toolbar {
+  --background: var(--ion-color-primary);
+  --color: white;
+}
+
+ion-toolbar ion-button {
+  --color: white;
+}
+
+ion-toolbar ion-icon {
+  color: white;
+}
+
 .create-trip-container {
   max-width: 600px;
   margin: 0 auto;
   padding: 20px 0;
+}
+
+.icon-container {
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.page-icon {
+  font-size: 64px;
+  color: var(--ion-color-primary);
 }
 
 h1 {
@@ -176,5 +201,10 @@ h1 {
 
 ion-card {
   margin-top: 20px;
+}
+
+ion-item {
+  --padding-start: 0;
+  --inner-padding-end: 0;
 }
 </style>

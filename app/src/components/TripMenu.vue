@@ -5,10 +5,18 @@
         v-model="searchQuery"
         placeholder="Search trips..."
         @ionInput="handleSearch"
-        debounce="300"
+        :debounce="300"
       ></ion-searchbar>
 
-      <ion-list v-if="!loading && filteredTrips.length > 0">
+      <div class="create-button-container">
+        <ion-button expand="block" @click="createNewTrip" class="create-button">
+          <ion-icon :icon="add" slot="start"></ion-icon>
+          Create New Trip
+        </ion-button>
+      </div>
+
+      <ion-list>
+        <!-- Trip Items -->
         <ion-item
           v-for="trip in filteredTrips"
           :key="trip.id"
@@ -17,15 +25,20 @@
           @click="selectTrip(trip)"
           :class="{ 'selected-trip': isCurrentTrip(trip) }"
         >
+          <div slot="start" :class="['trip-icon', isCurrentTrip(trip) ? 'active-icon' : 'inactive-icon']">
+            <ion-icon :icon="locationOutline"></ion-icon>
+          </div>
           <ion-label>
-            <h3>{{ trip.title.rendered }}</h3>
+            <h2 class="trip-title">{{ trip.title.rendered }}</h2>
+            <p class="trip-meta">
+              <span class="meta-item">0 entries</span>
+              <span class="meta-separator">•</span>
+              <span class="meta-item">
+                <ion-icon :icon="peopleOutline" class="meta-icon"></ion-icon>
+                1
+              </span>
+            </p>
           </ion-label>
-          <ion-icon
-            v-if="isCurrentTrip(trip)"
-            :icon="checkmark"
-            slot="end"
-            color="primary"
-          ></ion-icon>
         </ion-item>
       </ion-list>
 
@@ -36,17 +49,6 @@
 
       <div v-if="!loading && trips.length > 0 && filteredTrips.length === 0" class="empty-state">
         <p>No trips match your search</p>
-      </div>
-
-      <div v-if="!loading && trips.length === 0" class="empty-state">
-        <p>No trips yet</p>
-      </div>
-
-      <div class="menu-footer">
-        <ion-button expand="block" @click="createNewTrip">
-          <ion-icon :icon="add" slot="start"></ion-icon>
-          Create New Trip
-        </ion-button>
       </div>
     </ion-content>
   </ion-menu>
@@ -65,7 +67,7 @@ import {
   IonSearchbar,
   menuController
 } from '@ionic/vue';
-import { add, checkmark } from 'ionicons/icons';
+import { add, locationOutline, peopleOutline } from 'ionicons/icons';
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCurrentTrip, type Trip } from '../composables/useCurrentTrip';
@@ -108,8 +110,79 @@ function createNewTrip() {
 </script>
 
 <style scoped>
+ion-searchbar {
+  --font-size: 14px;
+}
+
+.create-button-container {
+  padding: 16px;
+}
+
+.create-button {
+  --border-radius: 8px;
+  font-weight: 500;
+  text-transform: none;
+  font-size: 15px;
+}
+
+.trip-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.active-icon {
+  background: var(--ion-color-primary);
+  color: white;
+}
+
+.inactive-icon {
+  background: var(--ion-color-light);
+  color: var(--ion-color-medium);
+}
+
+.trip-icon ion-icon {
+  font-size: 20px;
+}
+
+.trip-title {
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0 0 4px 0;
+  color: var(--ion-color-dark);
+}
+
+.trip-meta {
+  font-size: 14px;
+  color: var(--ion-color-medium);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.meta-separator {
+  margin: 0 2px;
+}
+
+.meta-icon {
+  font-size: 14px;
+  vertical-align: middle;
+}
+
 .selected-trip {
-  --background: var(--ion-color-light);
+  --background: var(--ion-color-light-tint);
 }
 
 .loading-container {
@@ -127,9 +200,9 @@ function createNewTrip() {
   color: var(--ion-color-medium);
 }
 
-.menu-footer {
-  padding: 16px;
-  border-top: 1px solid var(--ion-color-light);
-  margin-top: auto;
+ion-item {
+  --padding-start: 16px;
+  --inner-padding-end: 16px;
+  --min-height: 60px;
 }
 </style>

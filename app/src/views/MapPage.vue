@@ -11,7 +11,7 @@
         <ion-title v-else>Map</ion-title>
         <ion-buttons slot="end" v-if="currentTrip">
           <ion-button @click="openSettings">
-            <ion-icon slot="icon-only" :icon="settingsOutline"></ion-icon>
+            <ion-icon slot="icon-only" :icon="ellipsisHorizontalOutline"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -25,6 +25,29 @@
         <p>No trip selected</p>
       </div>
     </ion-content>
+
+    <ion-fab slot="fixed" vertical="bottom" horizontal="end" v-if="currentTrip">
+      <ion-fab-button size="small">
+        <ion-icon :icon="add"></ion-icon>
+      </ion-fab-button>
+      <ion-fab-list side="top">
+        <ion-fab-button size="small" @click="addCollaborator" color="light">
+          <ion-icon :icon="person"></ion-icon>
+        </ion-fab-button>
+        <ion-fab-button size="small" @click="addSong" color="light">
+          <ion-icon :icon="musicalNotes"></ion-icon>
+        </ion-fab-button>
+        <ion-fab-button size="small" @click="addStop" color="light">
+          <ion-icon :icon="locationOutline"></ion-icon>
+        </ion-fab-button>
+        <ion-fab-button size="small" @click="addMedia" color="light">
+          <ion-icon :icon="images"></ion-icon>
+        </ion-fab-button>
+        <ion-fab-button size="small" @click="addEntry" color="light">
+          <ion-icon :icon="newspaper"></ion-icon>
+        </ion-fab-button>
+      </ion-fab-list>
+    </ion-fab>
 
     <TripSettingsModal :is-open="settingsOpen" @close="closeSettings" />
   </ion-page>
@@ -40,11 +63,13 @@ import {
   IonButtons,
   IonButton,
   IonIcon,
-  IonMenuButton
+  IonMenuButton,
+  IonFab,
+  IonFabButton,
+  IonFabList
 } from '@ionic/vue';
-import { settingsOutline } from 'ionicons/icons';
+import { ellipsisHorizontalOutline, add, newspaper, images, locationOutline, musicalNotes, person } from 'ionicons/icons';
 import { ref, onMounted, watch, nextTick } from 'vue';
-import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
 import TripSettingsModal from '../components/TripSettingsModal.vue';
 
@@ -52,7 +77,7 @@ const { currentTrip } = useCurrentTrip();
 const settingsOpen = ref(false);
 const mapElement = ref<HTMLElement | null>(null);
 let map: google.maps.Map | null = null;
-let optionsSet = false;
+let googleMapsLoaded = false;
 
 onMounted(async () => {
   await nextTick();
@@ -68,6 +93,38 @@ watch(currentTrip, async (newTrip) => {
   }
 });
 
+async function loadGoogleMaps(apiKey: string): Promise<void> {
+  if (googleMapsLoaded) return;
+
+  return new Promise((resolve, reject) => {
+    if (typeof google !== 'undefined' && google.maps && google.maps.Map) {
+      googleMapsLoaded = true;
+      resolve();
+      return;
+    }
+
+    // Create a global callback function
+    const callbackName = 'initGoogleMapsCallback';
+    (window as any)[callbackName] = () => {
+      googleMapsLoaded = true;
+      delete (window as any)[callbackName];
+      resolve();
+    };
+
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}`;
+    script.async = true;
+    script.defer = true;
+
+    script.onerror = () => {
+      delete (window as any)[callbackName];
+      reject(new Error('Failed to load Google Maps'));
+    };
+
+    document.head.appendChild(script);
+  });
+}
+
 async function initMap() {
   if (!mapElement.value) {
     console.warn('Map element not found');
@@ -82,26 +139,17 @@ async function initMap() {
     return;
   }
 
-  // Set options only once with the API key
-  if (!optionsSet) {
-    console.log('Setting Google Maps options with API key');
-    setOptions({
-      apiKey: apiKey,
-      version: 'weekly',
-    });
-    optionsSet = true;
-  }
-
   try {
     console.log('Loading Google Maps...');
-    // Load the Maps library
-    const { Map } = await importLibrary('maps') as google.maps.MapsLibrary;
+
+    // Load Google Maps script
+    await loadGoogleMaps(apiKey);
 
     // Default center (San Francisco)
     const center = { lat: 37.7749, lng: -122.4194 };
 
     console.log('Creating map instance...');
-    map = new Map(mapElement.value, {
+    map = new google.maps.Map(mapElement.value, {
       center: center,
       zoom: 8,
       mapTypeControl: true,
@@ -121,9 +169,51 @@ function openSettings() {
 function closeSettings() {
   settingsOpen.value = false;
 }
+
+function addEntry() {
+  console.log('Add entry');
+  // TODO: Navigate to add entry page
+}
+
+function addMedia() {
+  console.log('Add media');
+  // TODO: Open media picker
+}
+
+function addStop() {
+  console.log('Add stop');
+  // TODO: Navigate to add stop page
+}
+
+function addSong() {
+  console.log('Add song');
+  // TODO: Open song picker
+}
+
+function addCollaborator() {
+  console.log('Add collaborator');
+  // TODO: Open collaborator invite
+}
 </script>
 
 <style scoped>
+ion-toolbar {
+  --background: var(--ion-color-primary);
+  --color: white;
+}
+
+ion-toolbar ion-button {
+  --color: white;
+}
+
+ion-toolbar ion-icon {
+  color: white;
+}
+
+ion-toolbar ion-menu-button {
+  --color: white;
+}
+
 .map-container {
   width: 100%;
   height: 100%;

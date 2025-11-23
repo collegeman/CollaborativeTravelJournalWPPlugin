@@ -14,7 +14,7 @@ A modern WordPress plugin for collaborative travel journaling.
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/collegeman/collaborative-travel-journal-wp-plugin.git
+   git clone https://github.com/collegeman/CollaborativeTravelJournalWPPlugin.git
    cd collaborative-travel-journal-wp-plugin
    ```
 
@@ -39,7 +39,7 @@ Add to your Bedrock project's `composer.json`:
   "repositories": [
     {
       "type": "vcs",
-      "url": "https://github.com/collegeman/collaborative-travel-journal-wp-plugin"
+      "url": "https://github.com/collegeman/CollaborativeTravelJournalWPPlugin"
     }
   ],
   "require": {

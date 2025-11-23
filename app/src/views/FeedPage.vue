@@ -11,7 +11,7 @@
         <ion-title v-else>Feed</ion-title>
         <ion-buttons slot="end" v-if="currentTrip">
           <ion-button @click="openSettings">
-            <ion-icon slot="icon-only" :icon="settingsOutline"></ion-icon>
+            <ion-icon slot="icon-only" :icon="ellipsisHorizontalOutline"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
@@ -33,14 +33,20 @@
         <ion-icon :icon="add"></ion-icon>
       </ion-fab-button>
       <ion-fab-list side="top">
-        <ion-fab-button size="small" @click="addEntry" color="light">
-          <ion-icon :icon="documentTextOutline"></ion-icon>
+        <ion-fab-button size="small" @click="addCollaborator" color="light">
+          <ion-icon :icon="person"></ion-icon>
+        </ion-fab-button>
+        <ion-fab-button size="small" @click="addSong" color="light">
+          <ion-icon :icon="musicalNotes"></ion-icon>
         </ion-fab-button>
         <ion-fab-button size="small" @click="addStop" color="light">
           <ion-icon :icon="locationOutline"></ion-icon>
         </ion-fab-button>
         <ion-fab-button size="small" @click="addMedia" color="light">
-          <ion-icon :icon="cameraOutline"></ion-icon>
+          <ion-icon :icon="images"></ion-icon>
+        </ion-fab-button>
+        <ion-fab-button size="small" @click="addEntry" color="light">
+          <ion-icon :icon="newspaper"></ion-icon>
         </ion-fab-button>
       </ion-fab-list>
     </ion-fab>
@@ -64,7 +70,7 @@ import {
   IonFabButton,
   IonFabList
 } from '@ionic/vue';
-import { settingsOutline, add, documentTextOutline, locationOutline, cameraOutline } from 'ionicons/icons';
+import { ellipsisHorizontalOutline, add, newspaper, images, locationOutline, musicalNotes, person } from 'ionicons/icons';
 import { ref } from 'vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
 import TripSettingsModal from '../components/TripSettingsModal.vue';
@@ -85,18 +91,49 @@ function addEntry() {
   // TODO: Navigate to add entry page
 }
 
+function addMedia() {
+  console.log('Add media');
+  // TODO: Open media picker
+}
+
 function addStop() {
   console.log('Add stop');
   // TODO: Navigate to add stop page
 }
 
-function addMedia() {
-  console.log('Add media');
-  // TODO: Open media picker
+function addSong() {
+  console.log('Add song');
+  // TODO: Open song picker
+}
+
+function addCollaborator() {
+  console.log('Add collaborator');
+  // TODO: Open collaborator invite
 }
 </script>
 
 <style scoped>
+ion-toolbar {
+  --background: var(--ion-color-primary);
+  --color: white;
+}
+
+ion-toolbar ion-button {
+  --color: white;
+}
+
+ion-toolbar ion-icon {
+  color: white;
+}
+
+ion-toolbar ion-menu-button {
+  --color: white;
+}
+
+ion-content {
+  --background: #faf8f5;
+}
+
 h1 {
   margin-bottom: 20px;
 }
