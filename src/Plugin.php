@@ -28,10 +28,27 @@ final class Plugin {
 
     private function registerHooks(): void {
         add_action('init', [$this, 'onInit']);
+        Routes::register();
     }
 
     public function onInit(): void {
-        // Register custom post types, taxonomies, etc.
+        $this->registerPostTypes();
+        $this->registerTaxonomies();
+    }
+
+    private function registerPostTypes(): void {
+        PostTypes\Trip::register();
+        PostTypes\Stop::register();
+        PostTypes\Entry::register();
+        PostTypes\Expense::register();
+        PostTypes\Song::register();
+    }
+
+    private function registerTaxonomies(): void {
+        Taxonomies\StopType::register();
+        Taxonomies\StopStatus::register();
+        Taxonomies\TripStatus::register();
+        Taxonomies\ExpenseCategory::register();
     }
 
     public function getVersion(): string {
