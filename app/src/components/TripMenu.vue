@@ -1,17 +1,19 @@
 <template>
   <ion-menu content-id="main-content" type="overlay">
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>Your Trips</ion-title>
-      </ion-toolbar>
-    </ion-header>
-
     <ion-content>
-      <ion-list v-if="!loading && trips.length > 0">
+      <ion-searchbar
+        v-model="searchQuery"
+        placeholder="Search trips..."
+        @ionInput="handleSearch"
+        debounce="300"
+      ></ion-searchbar>
+
+      <ion-list v-if="!loading && filteredTrips.length > 0">
         <ion-item
-          v-for="trip in trips"
+          v-for="trip in filteredTrips"
           :key="trip.id"
           button
+          :detail="false"
           @click="selectTrip(trip)"
           :class="{ 'selected-trip': isCurrentTrip(trip) }"
         >
@@ -32,6 +34,10 @@
         <p>Loading trips...</p>
       </div>
 
+      <div v-if="!loading && trips.length > 0 && filteredTrips.length === 0" class="empty-state">
+        <p>No trips match your search</p>
+      </div>
+
       <div v-if="!loading && trips.length === 0" class="empty-state">
         <p>No trips yet</p>
       </div>
@@ -49,9 +55,6 @@
 <script setup lang="ts">
 import {
   IonMenu,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
   IonContent,
   IonList,
   IonItem,
@@ -59,43 +62,33 @@ import {
   IonButton,
   IonIcon,
   IonSpinner,
+  IonSearchbar,
   menuController
 } from '@ionic/vue';
 import { add, checkmark } from 'ionicons/icons';
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCurrentTrip, type Trip } from '../composables/useCurrentTrip';
 
 const router = useRouter();
-const { currentTrip, setCurrentTrip } = useCurrentTrip();
+const { currentTrip, trips, setCurrentTrip, setTrips } = useCurrentTrip();
 
-const trips = ref<Trip[]>([]);
 const loading = ref(false);
+const searchQuery = ref('');
 
-onMounted(async () => {
-  await fetchTrips();
+const filteredTrips = computed(() => {
+  if (!searchQuery.value.trim()) {
+    return trips.value;
+  }
+
+  const query = searchQuery.value.toLowerCase();
+  return trips.value.filter(trip =>
+    trip.title.rendered.toLowerCase().includes(query)
+  );
 });
 
-async function fetchTrips() {
-  try {
-    loading.value = true;
-    const apiUrl = (window as any).WP_API_URL || '/wp-json/';
-    const response = await fetch(apiUrl + 'wp/v2/ctj_trip', {
-      headers: {
-        'X-WP-Nonce': (window as any).WP_NONCE || ''
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    trips.value = await response.json();
-  } catch (e) {
-    console.error('Error fetching trips:', e);
-  } finally {
-    loading.value = false;
-  }
+function handleSearch(event: CustomEvent) {
+  searchQuery.value = event.detail.value || '';
 }
 
 function isCurrentTrip(trip: Trip): boolean {
@@ -105,6 +98,7 @@ function isCurrentTrip(trip: Trip): boolean {
 function selectTrip(trip: Trip) {
   setCurrentTrip(trip);
   menuController.close();
+  router.push('/tabs/feed');
 }
 
 function createNewTrip() {

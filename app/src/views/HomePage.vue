@@ -2,7 +2,10 @@
   <ion-page>
     <ion-header :translucent="true">
       <ion-toolbar>
-        <ion-title v-if="currentTrip" @click="openMenu" style="cursor: pointer;">
+        <ion-buttons slot="start">
+          <ion-menu-button></ion-menu-button>
+        </ion-buttons>
+        <ion-title v-if="currentTrip">
           {{ currentTrip.title.rendered }}
         </ion-title>
         <ion-title v-else>Journ - Travel Journal</ion-title>
@@ -73,7 +76,8 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonCardContent,
-  menuController
+  IonButtons,
+  IonMenuButton
 } from '@ionic/vue';
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
@@ -87,9 +91,8 @@ interface Trip {
 }
 
 const router = useRouter();
-const { currentTrip, setCurrentTrip } = useCurrentTrip();
+const { currentTrip, trips, setCurrentTrip, setTrips } = useCurrentTrip();
 
-const trips = ref<Trip[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const apiUrl = ref('');
@@ -124,17 +127,14 @@ async function fetchTrips() {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    trips.value = await response.json();
+    const fetchedTrips = await response.json();
+    setTrips(fetchedTrips);
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Unknown error occurred';
     console.error('Error fetching trips:', e);
   } finally {
     loading.value = false;
   }
-}
-
-function openMenu() {
-  menuController.open();
 }
 </script>
 

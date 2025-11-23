@@ -11,6 +11,7 @@ export interface Trip {
 }
 
 const currentTrip = ref<Trip | null>(null);
+const trips = ref<Trip[]>([]);
 
 export function useCurrentTrip() {
   function setCurrentTrip(trip: Trip | null) {
@@ -21,9 +22,25 @@ export function useCurrentTrip() {
     return currentTrip.value;
   }
 
+  function setTrips(newTrips: Trip[]) {
+    trips.value = newTrips;
+  }
+
+  function addTrip(trip: Trip) {
+    trips.value.push(trip);
+  }
+
+  function getTrips() {
+    return trips.value;
+  }
+
   return {
     currentTrip,
+    trips,
     setCurrentTrip,
-    getCurrentTrip
+    getCurrentTrip,
+    setTrips,
+    addTrip,
+    getTrips
   };
 }

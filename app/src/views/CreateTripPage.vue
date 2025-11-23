@@ -91,7 +91,7 @@ import { useRouter } from 'vue-router';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
 
 const router = useRouter();
-const { setCurrentTrip } = useCurrentTrip();
+const { setCurrentTrip, addTrip } = useCurrentTrip();
 
 const tripTitle = ref('');
 const tripDescription = ref('');
@@ -128,11 +128,14 @@ async function handleSubmit() {
 
     const newTrip = await response.json();
 
+    // Add trip to global trips list
+    addTrip(newTrip);
+
     // Set the new trip as current
     setCurrentTrip(newTrip);
 
-    // Redirect to home page (which will show the trip list)
-    router.push('/home');
+    // Redirect to feed page
+    router.push('/tabs/feed');
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to create trip';
     console.error('Error creating trip:', e);

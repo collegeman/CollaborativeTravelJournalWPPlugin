@@ -17,6 +17,16 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    port: 5173,
+    strictPort: true,
+    cors: true,
+    origin: 'http://localhost:5173',
+    hmr: {
+      host: 'localhost',
+      protocol: 'ws',
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom'
