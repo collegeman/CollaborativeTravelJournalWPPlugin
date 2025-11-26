@@ -36,5 +36,27 @@ final class Trip {
             'supports' => ['title', 'editor', 'author', 'thumbnail', 'excerpt'],
             'show_in_rest' => true,
         ]);
+
+        self::register_meta_fields();
+    }
+
+    private static function register_meta_fields(): void {
+        register_post_meta(self::POST_TYPE, 'collaborators', [
+            'type' => 'array',
+            'description' => 'Trip collaborators (user IDs with roles)',
+            'single' => true,
+            'show_in_rest' => [
+                'schema' => [
+                    'type' => 'array',
+                    'items' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'user_id' => ['type' => 'integer'],
+                            'role' => ['type' => 'string'],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
     }
 }

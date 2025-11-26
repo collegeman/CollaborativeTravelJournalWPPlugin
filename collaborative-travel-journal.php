@@ -28,6 +28,10 @@ define('CTJ_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CTJ_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('CTJ_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
+if (!defined('CTJ_APP_PATH')) {
+    define('CTJ_APP_PATH', 'journal');
+}
+
 require_once CTJ_PLUGIN_DIR . 'vendor/autoload.php';
 
 function ctj(): Plugin {

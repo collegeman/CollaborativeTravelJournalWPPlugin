@@ -1,5 +1,5 @@
 <template>
-  <ion-modal :is-open="isOpen" @didDismiss="closeModal">
+  <ion-modal :is-open="isOpen" @didDismiss="closeModal" @didPresent="loadCollaborators">
     <ion-header>
       <ion-toolbar>
         <ion-title>Trip Settings</ion-title>
@@ -13,21 +13,53 @@
       <div v-if="currentTrip">
         <h2>{{ currentTrip.title.rendered }}</h2>
 
-        <ion-list>
-          <ion-item>
-            <ion-label>
-              <h3>Trip Name</h3>
-              <p>{{ currentTrip.title.rendered }}</p>
-            </ion-label>
-          </ion-item>
+        <div class="settings-section">
+          <h3>Collaborators</h3>
 
-          <ion-item>
-            <ion-label>
-              <h3>Trip ID</h3>
-              <p>{{ currentTrip.id }}</p>
-            </ion-label>
-          </ion-item>
-        </ion-list>
+          <div v-if="loadingCollaborators" class="loading-state">
+            <ion-spinner></ion-spinner>
+          </div>
+
+          <ion-list v-else>
+            <ion-item v-for="collab in collaborators" :key="collab.user_id">
+              <ion-label>
+                <h3>{{ collab.display_name }}</h3>
+                <p>{{ collab.email }}</p>
+              </ion-label>
+              <ion-badge slot="end" :color="getRoleBadgeColor(collab.role)">
+                {{ collab.role }}
+              </ion-badge>
+              <ion-button
+                v-if="collab.role !== 'owner'"
+                slot="end"
+                fill="clear"
+                color="danger"
+                @click="confirmRemoveCollaborator(collab)"
+              >
+                <ion-icon slot="icon-only" :icon="closeCircleOutline"></ion-icon>
+              </ion-button>
+            </ion-item>
+          </ion-list>
+
+          <div class="invite-form">
+            <ion-item>
+              <ion-input
+                v-model="inviteEmail"
+                type="email"
+                placeholder="Enter email to invite"
+                :disabled="inviting"
+              ></ion-input>
+            </ion-item>
+            <ion-button
+              expand="block"
+              :disabled="!isValidEmail || inviting"
+              @click="handleInvite"
+            >
+              <ion-spinner v-if="inviting" slot="start"></ion-spinner>
+              {{ inviting ? 'Inviting...' : 'Invite Collaborator' }}
+            </ion-button>
+          </div>
+        </div>
 
         <div class="settings-section">
           <h3>Actions</h3>
@@ -58,11 +90,22 @@ import {
   IonList,
   IonItem,
   IonLabel,
+  IonInput,
+  IonIcon,
+  IonBadge,
+  IonSpinner,
   alertController
 } from '@ionic/vue';
-import { ref } from 'vue';
+import { closeCircleOutline } from 'ionicons/icons';
+import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
+import {
+  getCollaborators,
+  inviteCollaborator,
+  removeCollaborator,
+  type Collaborator
+} from '../services/collaborators';
 
 interface Props {
   isOpen: boolean;
@@ -72,14 +115,114 @@ interface Emits {
   (e: 'close'): void;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const router = useRouter();
 const { currentTrip, trips, setCurrentTrip, setTrips } = useCurrentTrip();
+
 const deleting = ref(false);
+const collaborators = ref<Collaborator[]>([]);
+const loadingCollaborators = ref(false);
+const inviteEmail = ref('');
+const inviting = ref(false);
+
+const isValidEmail = computed(() => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(inviteEmail.value);
+});
+
+function getRoleBadgeColor(role: string): string {
+  switch (role) {
+    case 'owner': return 'primary';
+    case 'contributor': return 'secondary';
+    case 'viewer': return 'medium';
+    default: return 'medium';
+  }
+}
+
+async function loadCollaborators() {
+  if (!currentTrip.value) return;
+
+  try {
+    loadingCollaborators.value = true;
+    collaborators.value = await getCollaborators(currentTrip.value.id);
+  } catch (e) {
+    console.error('Error loading collaborators:', e);
+    collaborators.value = [];
+  } finally {
+    loadingCollaborators.value = false;
+  }
+}
+
+async function handleInvite() {
+  if (!currentTrip.value || !isValidEmail.value) return;
+
+  try {
+    inviting.value = true;
+    const newCollab = await inviteCollaborator(currentTrip.value.id, {
+      email: inviteEmail.value,
+      role: 'contributor'
+    });
+    collaborators.value.push(newCollab);
+    inviteEmail.value = '';
+
+    const alert = await alertController.create({
+      header: 'Invitation Sent',
+      message: `${newCollab.display_name} has been invited to collaborate on this trip.`,
+      buttons: ['OK']
+    });
+    await alert.present();
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Failed to invite collaborator';
+    const alert = await alertController.create({
+      header: 'Error',
+      message,
+      buttons: ['OK']
+    });
+    await alert.present();
+  } finally {
+    inviting.value = false;
+  }
+}
+
+async function confirmRemoveCollaborator(collab: Collaborator) {
+  const alert = await alertController.create({
+    header: 'Remove Collaborator',
+    message: `Are you sure you want to remove ${collab.display_name} from this trip?`,
+    buttons: [
+      { text: 'Cancel', role: 'cancel' },
+      {
+        text: 'Remove',
+        role: 'destructive',
+        handler: () => {
+          doRemoveCollaborator(collab);
+        }
+      }
+    ]
+  });
+  await alert.present();
+}
+
+async function doRemoveCollaborator(collab: Collaborator) {
+  if (!currentTrip.value) return;
+
+  try {
+    await removeCollaborator(currentTrip.value.id, collab.user_id);
+    collaborators.value = collaborators.value.filter(c => c.user_id !== collab.user_id);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Failed to remove collaborator';
+    const alert = await alertController.create({
+      header: 'Error',
+      message,
+      buttons: ['OK']
+    });
+    await alert.present();
+  }
+}
 
 function closeModal() {
+  inviteEmail.value = '';
   emit('close');
 }
 
@@ -151,19 +294,15 @@ async function deleteTrip() {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    // Remove trip from local list
     const updatedTrips = trips.value.filter(t => t.id !== tripId);
     setTrips(updatedTrips);
 
-    // Close the modal
     closeModal();
 
-    // If there are other trips, select the first one
     if (updatedTrips.length > 0) {
       setCurrentTrip(updatedTrips[0]);
       router.push('/tabs/feed');
     } else {
-      // No trips left, redirect to create trip page
       setCurrentTrip(null);
       router.push('/trip/create');
     }
@@ -192,5 +331,28 @@ h2 {
 
 .settings-section ion-button:not(:first-of-type) {
   margin-top: 10px;
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.invite-form {
+  margin-top: 16px;
+}
+
+.invite-form ion-item {
+  --padding-start: 0;
+  margin-bottom: 12px;
+}
+
+.invite-form ion-button {
+  margin-top: 0;
+}
+
+ion-badge {
+  text-transform: capitalize;
 }
 </style>

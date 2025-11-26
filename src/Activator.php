@@ -14,7 +14,8 @@ final class Activator {
         self::createDatabaseTables();
         self::setDefaultOptions();
 
-        flush_rewrite_rules();
+        // Register and flush rewrite rules for the app path
+        Routes::flush();
     }
 
     private static function checkRequirements(): void {

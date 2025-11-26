@@ -30,12 +30,16 @@ if (empty($google_maps_key) && getenv('GOOGLE_MAPS_API_KEY')) {
     $google_maps_key = getenv('GOOGLE_MAPS_API_KEY');
 }
 
+// Get the app path
+$app_path = \Collegeman\CollaborativeTravelJournal\Routes::getAppPath();
+
 // Inject WordPress API configuration
 $wp_config = sprintf(
-    '<script>window.WP_API_URL = %s; window.WP_NONCE = %s; window.GOOGLE_MAPS_API_KEY = %s;</script>',
+    '<script>window.WP_API_URL = %s; window.WP_NONCE = %s; window.GOOGLE_MAPS_API_KEY = %s; window.CTJ_APP_PATH = %s;</script>',
     wp_json_encode(rest_url()),
     wp_json_encode(wp_create_nonce('wp_rest')),
-    wp_json_encode($google_maps_key)
+    wp_json_encode($google_maps_key),
+    wp_json_encode($app_path)
 );
 
 if ($is_dev_mode) {
