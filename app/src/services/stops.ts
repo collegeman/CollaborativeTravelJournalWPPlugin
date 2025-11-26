@@ -25,6 +25,7 @@ export interface Stop {
     longitude: number;
     date: string;
     time?: string;
+    specify_time?: boolean;
   };
 }
 
