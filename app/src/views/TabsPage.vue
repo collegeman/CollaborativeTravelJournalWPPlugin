@@ -93,7 +93,7 @@ async function fetchTrips() {
 </script>
 
 <style scoped>
-@media (orientation: landscape) {
+@media (orientation: landscape) and (max-width: 768px) {
   ion-tab-bar {
     display: none;
   }

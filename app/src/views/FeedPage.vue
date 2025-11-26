@@ -9,11 +9,6 @@
           {{ currentTrip.title.rendered }}
         </ion-title>
         <ion-title v-else>Feed</ion-title>
-        <ion-buttons slot="end" v-if="currentTrip">
-          <ion-button @click="openSettings">
-            <ion-icon slot="icon-only" :icon="ellipsisHorizontalOutline"></ion-icon>
-          </ion-button>
-        </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
@@ -59,7 +54,6 @@
       @add-collaborator="addCollaborator"
     />
 
-    <TripSettingsModal :is-open="settingsOpen" @close="closeSettings" />
     <CreateStopModal :is-open="createStopOpen" @close="closeCreateStop" @stop-created="handleStopCreated" />
   </ion-page>
 </template>
@@ -73,7 +67,6 @@ import {
   IonToolbar,
   IonButtons,
   IonButton,
-  IonIcon,
   IonMenuButton,
   IonCard,
   IonCardHeader,
@@ -82,16 +75,13 @@ import {
   IonCardContent,
   IonSpinner
 } from '@ionic/vue';
-import { ellipsisHorizontalOutline } from 'ionicons/icons';
 import { ref, watch, onMounted } from 'vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
-import TripSettingsModal from '../components/TripSettingsModal.vue';
 import CreateStopModal from '../components/CreateStopModal.vue';
 import ActionFab from '../components/ActionFab.vue';
 import { getStopsByTrip, type Stop as ApiStop } from '../services/stops';
 
 const { currentTrip } = useCurrentTrip();
-const settingsOpen = ref(false);
 const createStopOpen = ref(false);
 const stops = ref<ApiStop[]>([]);
 const loading = ref(false);
@@ -142,14 +132,6 @@ onMounted(() => {
 watch(currentTrip, () => {
   loadStops();
 });
-
-function openSettings() {
-  settingsOpen.value = true;
-}
-
-function closeSettings() {
-  settingsOpen.value = false;
-}
 
 function addEntry() {
   console.log('Add entry');
@@ -250,7 +232,7 @@ ion-content {
   height: 100%;
 }
 
-@media (orientation: landscape) {
+@media (orientation: landscape) and (max-width: 768px) {
   ion-header {
     display: none;
   }

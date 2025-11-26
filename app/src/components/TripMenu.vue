@@ -1,12 +1,17 @@
 <template>
   <ion-menu content-id="main-content" type="overlay">
     <ion-content>
-      <ion-searchbar
-        v-model="searchQuery"
-        placeholder="Search trips..."
-        @ionInput="handleSearch"
-        :debounce="300"
-      ></ion-searchbar>
+      <div class="search-row">
+        <ion-searchbar
+          v-model="searchQuery"
+          placeholder="Search trips..."
+          @ionInput="handleSearch"
+          :debounce="300"
+        ></ion-searchbar>
+        <ion-button fill="clear" class="settings-button" @click="openTripsPage">
+          <ion-icon slot="icon-only" :icon="settingsOutline"></ion-icon>
+        </ion-button>
+      </div>
 
       <div class="create-button-container">
         <ion-button expand="block" @click="createNewTrip" class="create-button">
@@ -67,7 +72,7 @@ import {
   IonSearchbar,
   menuController
 } from '@ionic/vue';
-import { add, locationOutline, peopleOutline } from 'ionicons/icons';
+import { add, locationOutline, peopleOutline, settingsOutline } from 'ionicons/icons';
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCurrentTrip, type Trip } from '../composables/useCurrentTrip';
@@ -107,9 +112,29 @@ function createNewTrip() {
   menuController.close();
   router.push('/trip/create');
 }
+
+function openTripsPage() {
+  menuController.close();
+  router.push('/trips');
+}
 </script>
 
 <style scoped>
+.search-row {
+  display: flex;
+  align-items: center;
+  padding-right: 8px;
+}
+
+.search-row ion-searchbar {
+  flex: 1;
+}
+
+.settings-button {
+  --color: var(--ion-color-medium);
+  margin: 0;
+}
+
 ion-searchbar {
   --font-size: 14px;
 }

@@ -9,11 +9,6 @@
           {{ currentTrip.title.rendered }}
         </ion-title>
         <ion-title v-else>Map</ion-title>
-        <ion-buttons slot="end" v-if="currentTrip">
-          <ion-button @click="openSettings">
-            <ion-icon slot="icon-only" :icon="ellipsisHorizontalOutline"></ion-icon>
-          </ion-button>
-        </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
@@ -35,7 +30,6 @@
       @add-collaborator="addCollaborator"
     />
 
-    <TripSettingsModal :is-open="settingsOpen" @close="closeSettings" />
     <CreateStopModal :is-open="createStopOpen" @close="closeCreateStop" />
   </ion-page>
 </template>
@@ -48,19 +42,14 @@ import {
   IonTitle,
   IonToolbar,
   IonButtons,
-  IonButton,
-  IonIcon,
   IonMenuButton
 } from '@ionic/vue';
-import { ellipsisHorizontalOutline } from 'ionicons/icons';
 import { ref, onMounted, watch, nextTick } from 'vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
-import TripSettingsModal from '../components/TripSettingsModal.vue';
 import CreateStopModal from '../components/CreateStopModal.vue';
 import ActionFab from '../components/ActionFab.vue';
 
 const { currentTrip } = useCurrentTrip();
-const settingsOpen = ref(false);
 const createStopOpen = ref(false);
 const mapElement = ref<HTMLElement | null>(null);
 let map: google.maps.Map | null = null;
@@ -168,14 +157,6 @@ async function initMap() {
   }
 }
 
-function openSettings() {
-  settingsOpen.value = true;
-}
-
-function closeSettings() {
-  settingsOpen.value = false;
-}
-
 function addEntry() {
   console.log('Add entry');
   // TODO: Navigate to add entry page
@@ -263,7 +244,7 @@ ion-toolbar ion-menu-button {
   color: var(--ion-color-medium);
 }
 
-@media (orientation: landscape) {
+@media (orientation: landscape) and (max-width: 768px) {
   ion-header {
     display: none;
   }
