@@ -50,28 +50,14 @@
       </div>
     </ion-content>
 
-    <ion-fab slot="fixed" vertical="bottom" horizontal="end" v-if="currentTrip">
-      <ion-fab-button size="small">
-        <ion-icon :icon="add"></ion-icon>
-      </ion-fab-button>
-      <ion-fab-list side="top">
-        <ion-fab-button size="small" @click="addCollaborator" color="light">
-          <ion-icon :icon="person"></ion-icon>
-        </ion-fab-button>
-        <ion-fab-button size="small" @click="addSong" color="light">
-          <ion-icon :icon="musicalNotes"></ion-icon>
-        </ion-fab-button>
-        <ion-fab-button size="small" @click="addStop" color="light">
-          <ion-icon :icon="locationOutline"></ion-icon>
-        </ion-fab-button>
-        <ion-fab-button size="small" @click="addMedia" color="light">
-          <ion-icon :icon="images"></ion-icon>
-        </ion-fab-button>
-        <ion-fab-button size="small" @click="addEntry" color="light">
-          <ion-icon :icon="newspaper"></ion-icon>
-        </ion-fab-button>
-      </ion-fab-list>
-    </ion-fab>
+    <ActionFab
+      :current-trip="currentTrip"
+      @add-entry="addEntry"
+      @add-media="addMedia"
+      @add-stop="addStop"
+      @add-song="addSong"
+      @add-collaborator="addCollaborator"
+    />
 
     <TripSettingsModal :is-open="settingsOpen" @close="closeSettings" />
     <CreateStopModal :is-open="createStopOpen" @close="closeCreateStop" @stop-created="handleStopCreated" />
@@ -89,9 +75,6 @@ import {
   IonButton,
   IonIcon,
   IonMenuButton,
-  IonFab,
-  IonFabButton,
-  IonFabList,
   IonCard,
   IonCardHeader,
   IonCardTitle,
@@ -99,11 +82,12 @@ import {
   IonCardContent,
   IonSpinner
 } from '@ionic/vue';
-import { ellipsisHorizontalOutline, add, newspaper, images, locationOutline, musicalNotes, person } from 'ionicons/icons';
+import { ellipsisHorizontalOutline } from 'ionicons/icons';
 import { ref, watch, onMounted } from 'vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
 import TripSettingsModal from '../components/TripSettingsModal.vue';
 import CreateStopModal from '../components/CreateStopModal.vue';
+import ActionFab from '../components/ActionFab.vue';
 import { getStopsByTrip, type Stop as ApiStop } from '../services/stops';
 
 const { currentTrip } = useCurrentTrip();
