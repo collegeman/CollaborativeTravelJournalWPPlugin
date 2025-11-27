@@ -114,22 +114,6 @@
       </div>
     </ion-content>
 
-    <ActionFab
-      :current-trip="currentTrip"
-      @add-entry="addEntry"
-      @add-media="addMedia"
-      @add-stop="addStop"
-      @add-song="addSong"
-      @add-collaborator="addCollaborator"
-    />
-
-    <StopModal
-      :is-open="stopModalOpen"
-      :stop="selectedStop"
-      @close="closeStopModal"
-      @saved="handleStopSaved"
-      @deleted="handleStopDeleted"
-    />
   </ion-page>
 </template>
 
@@ -152,17 +136,19 @@ import {
 import { locationOutline, timeOutline, peopleOutline, chevronUpOutline, filterOutline } from 'ionicons/icons';
 import { ref, watch, onMounted } from 'vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
-import StopModal from '../components/StopModal.vue';
-import ActionFab from '../components/ActionFab.vue';
+import { useStopModal } from '../composables/useStopModal';
 import { getStopsByTrip, type Stop as ApiStop } from '../services/stops';
 
 const { currentTrip } = useCurrentTrip();
+const { openStopModal, onStopSaved, onStopDeleted } = useStopModal();
 const feedView = ref<'live' | 'plan'>('plan');
-const stopModalOpen = ref(false);
-const selectedStop = ref<ApiStop | null>(null);
 const stops = ref<ApiStop[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
+
+// Subscribe to global stop events (handles FAB-triggered creates)
+onStopSaved(() => loadStops());
+onStopDeleted(() => loadStops());
 
 async function loadStops() {
   if (!currentTrip.value) {
@@ -250,62 +236,21 @@ watch(currentTrip, () => {
   loadStops();
 });
 
-function addEntry() {
-  console.log('Add entry');
-  // TODO: Navigate to add entry page
-}
-
-function addMedia() {
-  console.log('Add media');
-  // TODO: Open media picker
-}
-
-function addStop() {
-  selectedStop.value = null;
-  stopModalOpen.value = true;
-}
-
-function closeStopModal() {
-  stopModalOpen.value = false;
-  selectedStop.value = null;
-}
-
-function handleStopSaved() {
-  loadStops();
-}
-
-function handleStopDeleted() {
-  loadStops();
-}
-
-function addSong() {
-  console.log('Add song');
-  // TODO: Open song picker
-}
-
-function addCollaborator() {
-  console.log('Add collaborator');
-  // TODO: Open collaborator invite
-}
-
 function openFilter() {
   console.log('Open filter');
   // TODO: Open filter modal/popover
 }
 
 function editStop(stop: ApiStop) {
-  selectedStop.value = stop;
-  stopModalOpen.value = true;
+  openStopModal(stop, {
+    onSaved: loadStops,
+    onDeleted: loadStops,
+  });
 }
 
 </script>
 
 <style scoped>
-ion-toolbar {
-  --background: var(--ion-color-primary);
-  --color: white;
-}
-
 ion-segment {
   --background: transparent;
 }
@@ -322,18 +267,6 @@ ion-segment-button {
   min-width: 80px;
   text-transform: none;
   font-weight: 500;
-}
-
-ion-toolbar ion-button {
-  --color: white;
-}
-
-ion-toolbar ion-icon {
-  color: white;
-}
-
-ion-toolbar ion-menu-button {
-  --color: white;
 }
 
 ion-content {
@@ -444,35 +377,5 @@ ion-content {
   text-align: center;
   color: var(--ion-color-medium);
   font-style: italic;
-}
-
-.loading-state,
-.error-state,
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 16px;
-  text-align: center;
-  color: var(--ion-color-medium);
-}
-
-.loading-state {
-  gap: 16px;
-}
-
-.error-state {
-  gap: 16px;
-}
-
-.empty-state {
-  height: 100%;
-}
-
-@media (orientation: landscape) and (max-width: 768px) {
-  ion-header {
-    display: none;
-  }
 }
 </style>

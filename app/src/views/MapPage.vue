@@ -21,22 +21,6 @@
       </div>
     </ion-content>
 
-    <ActionFab
-      :current-trip="currentTrip"
-      @add-entry="addEntry"
-      @add-media="addMedia"
-      @add-stop="addStop"
-      @add-song="addSong"
-      @add-collaborator="addCollaborator"
-    />
-
-    <StopModal
-      :is-open="stopModalOpen"
-      :stop="null"
-      @close="closeStopModal"
-      @saved="handleStopSaved"
-      @deleted="handleStopDeleted"
-    />
   </ion-page>
 </template>
 
@@ -52,14 +36,11 @@ import {
 } from '@ionic/vue';
 import { ref, onMounted, watch, nextTick } from 'vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
-import StopModal from '../components/StopModal.vue';
-import ActionFab from '../components/ActionFab.vue';
+import { loadGoogleMaps } from '../composables/useGoogleMaps';
 
 const { currentTrip } = useCurrentTrip();
-const stopModalOpen = ref(false);
 const mapElement = ref<HTMLElement | null>(null);
 let map: google.maps.Map | null = null;
-let googleMapsLoaded = false;
 
 onMounted(async () => {
   await nextTick();
@@ -75,55 +56,14 @@ watch(currentTrip, async (newTrip) => {
   }
 });
 
-async function loadGoogleMaps(apiKey: string): Promise<void> {
-  if (googleMapsLoaded) return;
-
-  return new Promise((resolve, reject) => {
-    if (typeof google !== 'undefined' && google.maps && google.maps.Map) {
-      googleMapsLoaded = true;
-      resolve();
-      return;
-    }
-
-    // Create a global callback function
-    const callbackName = 'initGoogleMapsCallback';
-    (window as any)[callbackName] = () => {
-      googleMapsLoaded = true;
-      delete (window as any)[callbackName];
-      resolve();
-    };
-
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}&loading=async`;
-
-    script.onerror = () => {
-      delete (window as any)[callbackName];
-      reject(new Error('Failed to load Google Maps'));
-    };
-
-    document.head.appendChild(script);
-  });
-}
-
 async function initMap() {
   if (!mapElement.value) {
     console.warn('Map element not found');
     return;
   }
 
-  // Get Google Maps API key from WordPress or fallback to env
-  const apiKey = (window as any).GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
-
-  if (!apiKey) {
-    console.error('Please set a valid Google Maps API key');
-    return;
-  }
-
   try {
-    console.log('Loading Google Maps...');
-
-    // Load Google Maps script
-    await loadGoogleMaps(apiKey);
+    await loadGoogleMaps();
 
     // Default center (San Francisco) - used as fallback
     let center = { lat: 37.7749, lng: -122.4194 };
@@ -163,61 +103,9 @@ async function initMap() {
   }
 }
 
-function addEntry() {
-  console.log('Add entry');
-  // TODO: Navigate to add entry page
-}
-
-function addMedia() {
-  console.log('Add media');
-  // TODO: Open media picker
-}
-
-function addStop() {
-  stopModalOpen.value = true;
-}
-
-function closeStopModal() {
-  stopModalOpen.value = false;
-}
-
-function handleStopSaved() {
-  // TODO: Refresh map markers when stops are added
-}
-
-function handleStopDeleted() {
-  // TODO: Refresh map markers when stops are deleted
-}
-
-function addSong() {
-  console.log('Add song');
-  // TODO: Open song picker
-}
-
-function addCollaborator() {
-  console.log('Add collaborator');
-  // TODO: Open collaborator invite
-}
 </script>
 
 <style scoped>
-ion-toolbar {
-  --background: var(--ion-color-primary);
-  --color: white;
-}
-
-ion-toolbar ion-button {
-  --color: white;
-}
-
-ion-toolbar ion-icon {
-  color: white;
-}
-
-ion-toolbar ion-menu-button {
-  --color: white;
-}
-
 .map-container {
   width: 100%;
   height: 100%;
@@ -248,19 +136,5 @@ ion-toolbar ion-menu-button {
 
 .map :deep(.gm-style-mtc label) {
   font-size: 13px !important;
-}
-
-.empty-state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--ion-color-medium);
-}
-
-@media (orientation: landscape) and (max-width: 768px) {
-  ion-header {
-    display: none;
-  }
 }
 </style>

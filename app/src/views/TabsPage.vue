@@ -30,6 +30,22 @@
         </ion-tab-button>
       </ion-tab-bar>
     </ion-tabs>
+
+    <StopModal
+      :is-open="isOpen"
+      :stop="editingStop"
+      @close="closeStopModal"
+      @saved="handleSaved"
+      @deleted="handleDeleted"
+    />
+
+    <ActionFab
+      :current-trip="currentTrip"
+      @add-entry="addEntry"
+      @add-media="addMedia"
+      @add-song="addSong"
+      @add-collaborator="addCollaborator"
+    />
   </ion-page>
 </template>
 
@@ -39,10 +55,15 @@ import { newspaper, images, map, musicalNotes, person } from 'ionicons/icons';
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import TripMenu from '../components/TripMenu.vue';
+import StopModal from '../components/StopModal.vue';
+import ActionFab from '../components/ActionFab.vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
+import { useStopModal } from '../composables/useStopModal';
+import { getTrips } from '../services/trips';
 
 const router = useRouter();
 const { currentTrip, trips, setCurrentTrip, setTrips, restoreSavedTrip } = useCurrentTrip();
+const { isOpen, editingStop, closeStopModal, handleSaved, handleDeleted } = useStopModal();
 
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -74,19 +95,7 @@ async function fetchTrips() {
   try {
     loading.value = true;
     error.value = null;
-
-    const apiUrl = (window as any).WP_API_URL || '/wp-json/';
-    const response = await fetch(apiUrl + 'wp/v2/ctj_trip', {
-      headers: {
-        'X-WP-Nonce': (window as any).WP_NONCE || ''
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const fetchedTrips = await response.json();
+    const fetchedTrips = await getTrips();
     setTrips(fetchedTrips);
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Unknown error occurred';
@@ -94,6 +103,27 @@ async function fetchTrips() {
   } finally {
     loading.value = false;
   }
+}
+
+// FAB action handlers
+function addEntry() {
+  console.log('Add entry');
+  // TODO: Navigate to add entry page
+}
+
+function addMedia() {
+  console.log('Add media');
+  // TODO: Open media picker
+}
+
+function addSong() {
+  console.log('Add song');
+  // TODO: Open song picker
+}
+
+function addCollaborator() {
+  console.log('Add collaborator');
+  // TODO: Open collaborator invite
 }
 </script>
 

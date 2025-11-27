@@ -91,6 +91,7 @@ import { close, locationOutline } from 'ionicons/icons';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
+import { createTrip } from '../services/trips';
 
 const router = useRouter();
 const { setCurrentTrip, addTrip } = useCurrentTrip();
@@ -109,26 +110,7 @@ async function handleSubmit() {
     creating.value = true;
     error.value = null;
 
-    const apiUrl = (window as any).WP_API_URL || '/wp-json/';
-    const response = await fetch(apiUrl + 'wp/v2/ctj_trip', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-WP-Nonce': (window as any).WP_NONCE || ''
-      },
-      body: JSON.stringify({
-        title: tripTitle.value,
-        content: tripDescription.value,
-        status: 'publish'
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const newTrip = await response.json();
+    const newTrip = await createTrip({ title: tripTitle.value });
 
     // Add trip to global trips list
     addTrip(newTrip);
@@ -152,19 +134,6 @@ function handleCancel() {
 </script>
 
 <style scoped>
-ion-toolbar {
-  --background: var(--ion-color-primary);
-  --color: white;
-}
-
-ion-toolbar ion-button {
-  --color: white;
-}
-
-ion-toolbar ion-icon {
-  color: white;
-}
-
 .create-trip-container {
   max-width: 600px;
   margin: 0 auto;

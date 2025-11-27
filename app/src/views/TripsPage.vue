@@ -70,10 +70,13 @@ import { locationOutline, peopleOutline, trashOutline } from 'ionicons/icons';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCurrentTrip, type Trip } from '../composables/useCurrentTrip';
+import { useAlerts } from '../composables/useAlerts';
+import { deleteTrip as deleteTripApi } from '../services/trips';
 import TripSettingsModal from '../components/TripSettingsModal.vue';
 
 const router = useRouter();
 const { currentTrip, trips, setCurrentTrip, setTrips } = useCurrentTrip();
+const { showError } = useAlerts();
 const settingsOpen = ref(false);
 
 function isCurrentTrip(trip: Trip): boolean {
@@ -116,10 +119,10 @@ async function confirmDeleteTrip(trip: Trip) {
         role: 'destructive',
         handler: (data) => {
           if (data.confirmName === tripName) {
-            deleteTrip(trip);
+            handleDeleteTrip(trip);
             return true;
           } else {
-            showErrorAlert('Trip name does not match');
+            showError('Trip name does not match');
             return false;
           }
         }
@@ -130,29 +133,9 @@ async function confirmDeleteTrip(trip: Trip) {
   await alert.present();
 }
 
-async function showErrorAlert(message: string) {
-  const alert = await alertController.create({
-    header: 'Error',
-    message: message,
-    buttons: ['OK']
-  });
-
-  await alert.present();
-}
-
-async function deleteTrip(trip: Trip) {
+async function handleDeleteTrip(trip: Trip) {
   try {
-    const apiUrl = (window as any).WP_API_URL || '/wp-json/';
-    const response = await fetch(apiUrl + `wp/v2/ctj_trip/${trip.id}`, {
-      method: 'DELETE',
-      headers: {
-        'X-WP-Nonce': (window as any).WP_NONCE || ''
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
+    await deleteTripApi(trip.id);
 
     const updatedTrips = trips.value.filter(t => t.id !== trip.id);
     setTrips(updatedTrips);
@@ -167,17 +150,12 @@ async function deleteTrip(trip: Trip) {
     }
   } catch (e) {
     console.error('Error deleting trip:', e);
-    showErrorAlert(e instanceof Error ? e.message : 'Failed to delete trip');
+    showError(e instanceof Error ? e.message : 'Failed to delete trip');
   }
 }
 </script>
 
 <style scoped>
-ion-toolbar {
-  --background: var(--ion-color-primary);
-  --color: white;
-}
-
 ion-back-button {
   --color: white;
 }
@@ -242,16 +220,5 @@ ion-item {
   --padding-start: 16px;
   --inner-padding-end: 16px;
   --min-height: 60px;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-  text-align: center;
-  color: var(--ion-color-medium);
-  gap: 16px;
 }
 </style>

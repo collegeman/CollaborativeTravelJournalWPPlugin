@@ -139,11 +139,12 @@ import {
   IonCardContent
 } from '@ionic/vue';
 import type { DatetimeCustomEvent } from '@ionic/vue';
-import { alertController } from '@ionic/vue';
 import { close, closeCircle, trashOutline } from 'ionicons/icons';
 import { ref, computed, watch, nextTick } from 'vue';
 import { createStop, updateStop, deleteStop, type Stop } from '../services/stops';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
+import { loadGoogleMaps } from '../composables/useGoogleMaps';
+import { useAlerts } from '../composables/useAlerts';
 
 const props = defineProps<{
   isOpen: boolean;
@@ -157,6 +158,7 @@ const emit = defineEmits<{
 }>();
 
 const { currentTrip } = useCurrentTrip();
+const { confirmDelete: confirmDeleteAlert } = useAlerts();
 
 // Unique IDs for datetime pickers (to avoid conflicts if multiple modals)
 const datePickerId = computed(() => props.stop ? `edit-stop-date-${props.stop.id}` : 'create-stop-date');
@@ -185,7 +187,6 @@ const saving = ref(false);
 const deleting = ref(false);
 const error = ref<string | null>(null);
 let autocomplete: google.maps.places.Autocomplete | null = null;
-let googleMapsLoaded = false;
 
 const commonTimezones = [
   { value: 'Pacific/Honolulu', label: 'Hawaii (HST)' },
@@ -275,63 +276,13 @@ watch(() => props.isOpen, async (newVal) => {
   }
 });
 
-async function loadGoogleMaps(apiKey: string): Promise<void> {
-  if (googleMapsLoaded) return;
-
-  return new Promise((resolve, reject) => {
-    if (typeof google !== 'undefined' && google.maps && google.maps.places) {
-      googleMapsLoaded = true;
-      resolve();
-      return;
-    }
-
-    const callbackName = 'initGoogleMapsCallback';
-    if (!(window as any)[callbackName]) {
-      (window as any)[callbackName] = () => {
-        googleMapsLoaded = true;
-        resolve();
-      };
-
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}&loading=async`;
-
-      script.onerror = () => {
-        delete (window as any)[callbackName];
-        reject(new Error('Failed to load Google Maps'));
-      };
-
-      document.head.appendChild(script);
-    } else {
-      const checkLoaded = setInterval(() => {
-        if (typeof google !== 'undefined' && google.maps && google.maps.places) {
-          googleMapsLoaded = true;
-          clearInterval(checkLoaded);
-          resolve();
-        }
-      }, 100);
-    }
-  });
-}
-
 async function initAutocomplete() {
   if (autocomplete || !placeInput.value) return;
 
-  const apiKey = (window as any).GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
-
-  if (!apiKey) {
-    error.value = 'Google Maps API key not configured';
-    return;
-  }
-
   try {
-    await loadGoogleMaps(apiKey);
+    await loadGoogleMaps();
   } catch (err) {
-    error.value = 'Failed to load Google Maps';
-    return;
-  }
-
-  if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
-    error.value = 'Google Maps Places not available';
+    error.value = err instanceof Error ? err.message : 'Failed to load Google Maps';
     return;
   }
 
@@ -369,19 +320,10 @@ function clearPlace() {
 async function confirmDelete() {
   if (!props.stop) return;
 
-  const alert = await alertController.create({
-    header: 'Delete Stop',
-    message: `Are you sure you want to delete "${props.stop.title.rendered}"?`,
-    buttons: [
-      { text: 'Cancel', role: 'cancel' },
-      {
-        text: 'Delete',
-        role: 'destructive',
-        handler: () => handleDelete()
-      }
-    ]
-  });
-  await alert.present();
+  const confirmed = await confirmDeleteAlert(props.stop.title.rendered, 'Delete Stop');
+  if (confirmed) {
+    await handleDelete();
+  }
 }
 
 async function handleDelete() {

@@ -10,7 +10,7 @@
       <ion-fab-button @click="$emit('add-song')" color="light">
         <ion-icon :icon="musicalNotes"></ion-icon>
       </ion-fab-button>
-      <ion-fab-button @click="$emit('add-stop')" color="light">
+      <ion-fab-button @click="handleAddStop" color="light">
         <ion-icon :icon="locationOutline"></ion-icon>
       </ion-fab-button>
       <ion-fab-button @click="$emit('add-media')" color="light">
@@ -27,6 +27,7 @@
 import { IonFab, IonFabButton, IonFabList, IonIcon } from '@ionic/vue';
 import { add, person, musicalNotes, locationOutline, images, newspaper } from 'ionicons/icons';
 import type { Trip } from '../composables/useCurrentTrip';
+import { useStopModal } from '../composables/useStopModal';
 
 defineProps<{
   currentTrip: Trip | null;
@@ -35,8 +36,25 @@ defineProps<{
 defineEmits<{
   'add-collaborator': [];
   'add-song': [];
-  'add-stop': [];
   'add-media': [];
   'add-entry': [];
 }>();
+
+const { openStopModal } = useStopModal();
+
+function handleAddStop() {
+  openStopModal(null);
+}
 </script>
+
+<style scoped>
+ion-fab {
+  bottom: calc(var(--ion-safe-area-bottom, 0px) + 60px);
+}
+
+@media (orientation: landscape) and (max-width: 768px) {
+  ion-fab {
+    bottom: var(--ion-safe-area-bottom, 16px);
+  }
+}
+</style>

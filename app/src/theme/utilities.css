@@ -1,0 +1,74 @@
+/* Global utility styles */
+
+/* Primary toolbar styling - used across all pages */
+ion-toolbar.toolbar-primary,
+ion-header ion-toolbar {
+  --background: var(--ion-color-primary);
+  --color: white;
+}
+
+ion-header ion-toolbar ion-button {
+  --color: white;
+}
+
+ion-header ion-toolbar ion-icon {
+  color: white;
+}
+
+ion-header ion-toolbar ion-menu-button {
+  --color: white;
+}
+
+/* Empty state container */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--ion-color-medium);
+  height: 100%;
+}
+
+/* Loading state container */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--ion-color-medium);
+  gap: 16px;
+}
+
+/* Error state container */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--ion-color-medium);
+  gap: 16px;
+}
+
+/* Common content background */
+ion-content.content-bg {
+  --background: #faf8f5;
+}
+
+/* Placeholder text */
+.placeholder {
+  color: var(--ion-color-medium);
+  font-style: italic;
+}
+
+/* Hide header in landscape on small devices */
+@media (orientation: landscape) and (max-width: 768px) {
+  .hide-landscape-header ion-header {
+    display: none;
+  }
+}
