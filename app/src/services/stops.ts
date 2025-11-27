@@ -7,8 +7,9 @@ export interface StopData {
   placeId: string;
   latitude: number;
   longitude: number;
-  date: string;
-  time?: string;
+  date: string;       // YYYY-MM-DD format
+  time: string;       // HH:mm format (defaults to 08:00 if not specified)
+  timezone: string;   // IANA timezone (e.g., America/New_York)
   specifyTime: boolean;
 }
 
@@ -24,8 +25,9 @@ export interface Stop {
     latitude: number;
     longitude: number;
     date: string;
-    time?: string;
-    specify_time?: boolean;
+    time: string;
+    timezone: string;
+    specify_time: boolean;
   };
 }
 
@@ -44,7 +46,8 @@ export async function createStop(stopData: StopData): Promise<Stop> {
       latitude: stopData.latitude,
       longitude: stopData.longitude,
       date: stopData.date,
-      time: stopData.time || '',
+      time: stopData.time,
+      timezone: stopData.timezone,
       specify_time: stopData.specifyTime,
     },
   };

@@ -31,7 +31,7 @@
           <ion-card v-for="stop in stops" :key="stop.id" class="stop-card">
             <ion-card-header>
               <ion-card-title>{{ stop.title.rendered }}</ion-card-title>
-              <ion-card-subtitle>{{ formatDate(stop.meta.date, stop.meta.time, stop.meta.specify_time) }}</ion-card-subtitle>
+              <ion-card-subtitle>{{ formatDate(stop.meta.date, stop.meta.time, stop.meta.specify_time, stop.meta.timezone) }}</ion-card-subtitle>
             </ion-card-header>
             <ion-card-content v-if="stop.meta.formatted_address">
               {{ stop.meta.formatted_address }}
@@ -105,23 +105,55 @@ async function loadStops() {
   }
 }
 
-function formatDate(dateString: string, timeString?: string, specifyTime?: boolean): string {
-  const date = new Date(dateString);
-  const options: Intl.DateTimeFormatOptions = {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  };
+// Format date/time for display WITHOUT any timezone conversion
+// We display exactly what was stored
+function formatDate(dateString: string, timeString: string, specifyTime: boolean, timezone?: string): string {
+  // Parse YYYY-MM-DD directly - no Date object to avoid timezone issues
+  const [year, month, day] = dateString.split('-').map(Number);
 
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  // Get day of week (using UTC to avoid any shifts)
+  const tempDate = new Date(Date.UTC(year, month - 1, day));
+  const dayOfWeek = dayNames[tempDate.getUTCDay()];
+
+  let result = `${dayOfWeek}, ${monthNames[month - 1]} ${day}, ${year}`;
+
+  // Only show time if user explicitly specified it
   if (specifyTime && timeString) {
-    options.hour = 'numeric';
-    options.minute = '2-digit';
-    const [hours, minutes] = timeString.split(':');
-    date.setHours(parseInt(hours), parseInt(minutes));
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const hour12 = hours % 12 || 12;
+    result += ` at ${hour12}:${String(minutes).padStart(2, '0')} ${ampm}`;
+
+    // Show timezone abbreviation
+    if (timezone) {
+      const tzAbbr = getTimezoneAbbreviation(timezone, year, month, day, hours);
+      result += ` ${tzAbbr}`;
+    }
   }
 
-  return date.toLocaleDateString('en-US', options);
+  return result;
+}
+
+// Get timezone abbreviation from IANA timezone identifier
+function getTimezoneAbbreviation(timezone: string, year: number, month: number, day: number, hours: number): string {
+  try {
+    // Create a date in the specified timezone to get the correct abbreviation
+    const date = new Date(year, month - 1, day, hours);
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      timeZoneName: 'short'
+    });
+    const parts = formatter.formatToParts(date);
+    const tzPart = parts.find(p => p.type === 'timeZoneName');
+    return tzPart?.value || timezone;
+  } catch {
+    // Fallback: extract short name from IANA identifier
+    return timezone.split('/').pop()?.replace(/_/g, ' ') || timezone;
+  }
 }
 
 // Load stops when component mounts or when trip changes

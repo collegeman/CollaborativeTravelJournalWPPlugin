@@ -72,11 +72,15 @@ final class Stop {
             ],
             'time' => [
                 'type' => 'string',
-                'description' => 'Time of stop (optional)',
+                'description' => 'Time of stop in HH:mm format',
+            ],
+            'timezone' => [
+                'type' => 'string',
+                'description' => 'Timezone identifier (e.g., America/New_York)',
             ],
             'specify_time' => [
                 'type' => 'boolean',
-                'description' => 'Whether time was explicitly specified',
+                'description' => 'Whether time was explicitly specified by user',
             ],
         ];
 

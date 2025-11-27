@@ -39,21 +39,32 @@
               <ion-label position="stacked">Time</ion-label>
               <ion-datetime-button datetime="stop-time"></ion-datetime-button>
             </ion-item>
+
+            <ion-item v-if="specifyTime">
+              <ion-label position="stacked">Timezone</ion-label>
+              <ion-select v-model="timezone" interface="action-sheet">
+                <ion-select-option v-for="tz in commonTimezones" :key="tz.value" :value="tz.value">
+                  {{ tz.label }}
+                </ion-select-option>
+              </ion-select>
+            </ion-item>
           </ion-list>
 
           <ion-modal :keep-contents-mounted="true">
             <ion-datetime
               id="stop-date"
-              v-model="date"
+              :value="dateForPicker"
               presentation="date"
+              @ionChange="handleDateChange"
             ></ion-datetime>
           </ion-modal>
 
           <ion-modal :keep-contents-mounted="true">
             <ion-datetime
               id="stop-time"
-              v-model="time"
+              :value="timeForPicker"
               presentation="time"
+              @ionChange="handleTimeChange"
             ></ion-datetime>
           </ion-modal>
 
@@ -95,14 +106,17 @@ import {
   IonDatetime,
   IonDatetimeButton,
   IonCheckbox,
+  IonSelect,
+  IonSelectOption,
   IonSpinner,
   IonCard,
   IonCardHeader,
   IonCardTitle,
   IonCardContent
 } from '@ionic/vue';
+import type { DatetimeCustomEvent } from '@ionic/vue';
 import { close } from 'ionicons/icons';
-import { ref, watch, nextTick } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { createStop } from '../services/stops';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
 
@@ -119,32 +133,93 @@ const { currentTrip } = useCurrentTrip();
 const placeInput = ref<HTMLInputElement | null>(null);
 const placeName = ref('');
 const selectedPlace = ref<google.maps.places.PlaceResult | null>(null);
-const date = ref(new Date().toISOString().split('T')[0]); // YYYY-MM-DD format
-const specifyTime = ref(false); // Whether to show time field
-const time = ref<string | undefined>(undefined); // Optional time in HH:mm format
+
+// Date stored as YYYY-MM-DD (exactly as user selected)
+const date = ref(getLocalDateString(new Date()));
+// Time stored as HH:mm (exactly as user selected)
+const time = ref('08:00');
+// Timezone stored as IANA identifier
+const timezone = ref(Intl.DateTimeFormat().resolvedOptions().timeZone);
+// Whether user explicitly specified time
+const specifyTime = ref(false);
+
 const creating = ref(false);
 const error = ref<string | null>(null);
 let autocomplete: google.maps.places.Autocomplete | null = null;
 let googleMapsLoaded = false;
+
+// Common timezones for the picker
+const commonTimezones = [
+  { value: 'Pacific/Honolulu', label: 'Hawaii (HST)' },
+  { value: 'America/Anchorage', label: 'Alaska (AKST)' },
+  { value: 'America/Los_Angeles', label: 'Pacific (PST)' },
+  { value: 'America/Denver', label: 'Mountain (MST)' },
+  { value: 'America/Chicago', label: 'Central (CST)' },
+  { value: 'America/New_York', label: 'Eastern (EST)' },
+  { value: 'America/Sao_Paulo', label: 'Brasilia (BRT)' },
+  { value: 'Europe/London', label: 'London (GMT)' },
+  { value: 'Europe/Paris', label: 'Paris (CET)' },
+  { value: 'Europe/Moscow', label: 'Moscow (MSK)' },
+  { value: 'Asia/Dubai', label: 'Dubai (GST)' },
+  { value: 'Asia/Kolkata', label: 'India (IST)' },
+  { value: 'Asia/Bangkok', label: 'Bangkok (ICT)' },
+  { value: 'Asia/Shanghai', label: 'China (CST)' },
+  { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
+  { value: 'Australia/Sydney', label: 'Sydney (AEDT)' },
+  { value: 'Pacific/Auckland', label: 'Auckland (NZDT)' },
+];
+
+// Get date string in local timezone (YYYY-MM-DD)
+function getLocalDateString(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// Value for the date picker - just the date string
+const dateForPicker = computed(() => date.value);
+
+// Value for the time picker - combine with date to make valid ISO
+const timeForPicker = computed(() => `${date.value}T${time.value}:00`);
+
+// Handle date picker change - extract YYYY-MM-DD
+function handleDateChange(event: DatetimeCustomEvent) {
+  const value = event.detail.value;
+  if (typeof value === 'string') {
+    // ion-datetime returns ISO format, extract just YYYY-MM-DD
+    date.value = value.split('T')[0];
+  }
+}
+
+// Handle time picker change - extract HH:mm
+function handleTimeChange(event: DatetimeCustomEvent) {
+  const value = event.detail.value;
+  if (typeof value === 'string' && value.includes('T')) {
+    const timePart = value.split('T')[1];
+    const match = timePart.match(/^(\d{2}:\d{2})/);
+    if (match) {
+      time.value = match[1];
+    }
+  }
+}
 
 watch(() => props.isOpen, async (newVal) => {
   if (newVal) {
     // Reset form when modal opens
     placeName.value = '';
     selectedPlace.value = null;
-    date.value = new Date().toISOString().split('T')[0];
+    date.value = getLocalDateString(new Date());
+    time.value = '08:00';
+    timezone.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
     specifyTime.value = false;
-    time.value = undefined;
     error.value = null;
 
-    // Initialize autocomplete after DOM is ready
-    // Wait for Ionic modal to be fully mounted
     await nextTick();
     setTimeout(() => {
       initAutocomplete();
     }, 100);
   } else {
-    // Clean up autocomplete when modal closes
     autocomplete = null;
   }
 });
@@ -159,7 +234,6 @@ async function loadGoogleMaps(apiKey: string): Promise<void> {
       return;
     }
 
-    // Create a global callback function
     const callbackName = 'initGoogleMapsCallback';
     if (!(window as any)[callbackName]) {
       (window as any)[callbackName] = () => {
@@ -177,7 +251,6 @@ async function loadGoogleMaps(apiKey: string): Promise<void> {
 
       document.head.appendChild(script);
     } else {
-      // Script is already loading, wait for it
       const checkLoaded = setInterval(() => {
         if (typeof google !== 'undefined' && google.maps && google.maps.places) {
           googleMapsLoaded = true;
@@ -192,7 +265,6 @@ async function loadGoogleMaps(apiKey: string): Promise<void> {
 async function initAutocomplete() {
   if (autocomplete || !placeInput.value) return;
 
-  // Get Google Maps API key from WordPress or fallback to env
   const apiKey = (window as any).GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
   if (!apiKey) {
@@ -212,12 +284,10 @@ async function initAutocomplete() {
     return;
   }
 
-  // Create the Autocomplete
   autocomplete = new google.maps.places.Autocomplete(placeInput.value, {
     fields: ['place_id', 'name', 'formatted_address', 'geometry']
   });
 
-  // Listen for place selection
   autocomplete.addListener('place_changed', () => {
     const place = autocomplete?.getPlace();
     if (place && place.place_id) {
@@ -252,7 +322,8 @@ async function handleSubmit() {
       latitude,
       longitude,
       date: date.value,
-      time: specifyTime.value ? time.value : undefined,
+      time: time.value,
+      timezone: timezone.value,
       specifyTime: specifyTime.value,
     });
 
