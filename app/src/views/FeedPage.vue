@@ -107,8 +107,8 @@
             </div>
           </template>
 
-          <div v-if="stops.length === 0" class="no-stops">
-            <p>No stops yet. Add your first stop to begin your journey!</p>
+          <div v-if="stops.length === 0 && !fabIsOpen" class="no-stops">
+            <p>Tap + to add your first stop</p>
           </div>
         </template>
       </div>
@@ -137,10 +137,14 @@ import { locationOutline, timeOutline, peopleOutline, chevronUpOutline, filterOu
 import { ref, watch, onMounted } from 'vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
 import { useStopModal } from '../composables/useStopModal';
+import { useEventStream } from '../composables/useEventStream';
+import { useFab } from '../composables/useFab';
 import { getStopsByTrip, type Stop as ApiStop } from '../services/stops';
 
 const { currentTrip } = useCurrentTrip();
 const { openStopModal, onStopSaved, onStopDeleted } = useStopModal();
+const { onStopChange } = useEventStream();
+const { isOpen: fabIsOpen } = useFab();
 const feedView = ref<'live' | 'plan'>('plan');
 const stops = ref<ApiStop[]>([]);
 const loading = ref(false);
@@ -149,6 +153,18 @@ const error = ref<string | null>(null);
 // Subscribe to global stop events (handles FAB-triggered creates)
 onStopSaved(() => loadStops());
 onStopDeleted(() => loadStops());
+
+// Subscribe to real-time stop events from other collaborators
+onStopChange((event) => {
+  console.log('Stop event received:', event.event_type, event.object_id);
+  if (event.event_type === 'stop.deleted') {
+    // Surgical removal for deletes
+    stops.value = stops.value.filter((s) => s.id !== event.object_id);
+  } else {
+    // Full reload for creates/updates
+    loadStops();
+  }
+});
 
 async function loadStops() {
   if (!currentTrip.value) {
@@ -373,9 +389,16 @@ ion-content {
 }
 
 .no-stops {
-  padding: 40px 16px;
-  text-align: center;
+  position: absolute;
+  bottom: 160px;
+  right: 24px;
+  text-align: right;
+}
+
+.no-stops p {
+  margin: 0;
   color: var(--ion-color-medium);
-  font-style: italic;
+  font-size: 15px;
+  font-weight: 500;
 }
 </style>

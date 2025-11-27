@@ -26,10 +26,13 @@ final class Plugin {
         );
     }
 
-    private function registerHooks(): void {
+    private function registerHooks(): void
+    {
         add_action('init', [$this, 'onInit']);
         Routes::register();
         Rest\CollaboratorsController::register();
+        Events\EventDispatcher::register();
+        Events\SSEController::register();
     }
 
     public function onInit(): void {

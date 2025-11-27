@@ -1,5 +1,12 @@
 <template>
-  <ion-fab slot="fixed" vertical="bottom" horizontal="end" v-if="currentTrip">
+  <ion-fab
+    slot="fixed"
+    vertical="bottom"
+    horizontal="end"
+    v-if="currentTrip"
+    :activated="isOpen"
+    @click="setOpen(!isOpen)"
+  >
     <ion-fab-button>
       <ion-icon :icon="add"></ion-icon>
     </ion-fab-button>
@@ -28,6 +35,7 @@ import { IonFab, IonFabButton, IonFabList, IonIcon } from '@ionic/vue';
 import { add, person, musicalNotes, locationOutline, images, newspaper } from 'ionicons/icons';
 import type { Trip } from '../composables/useCurrentTrip';
 import { useStopModal } from '../composables/useStopModal';
+import { useFab } from '../composables/useFab';
 
 defineProps<{
   currentTrip: Trip | null;
@@ -41,6 +49,7 @@ defineEmits<{
 }>();
 
 const { openStopModal } = useStopModal();
+const { isOpen, setOpen } = useFab();
 
 function handleAddStop() {
   openStopModal(null);
@@ -49,12 +58,13 @@ function handleAddStop() {
 
 <style scoped>
 ion-fab {
-  bottom: calc(var(--ion-safe-area-bottom, 0px) + 60px);
+  bottom: calc(var(--ion-safe-area-bottom, 0px) + 76px);
+  right: 16px;
 }
 
 @media (orientation: landscape) and (max-width: 768px) {
   ion-fab {
-    bottom: var(--ion-safe-area-bottom, 16px);
+    bottom: calc(var(--ion-safe-area-bottom, 16px) + 16px);
   }
 }
 </style>

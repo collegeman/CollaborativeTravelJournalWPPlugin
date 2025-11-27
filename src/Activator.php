@@ -29,9 +29,9 @@ final class Activator {
         }
     }
 
-    private static function createDatabaseTables(): void {
-        // Create custom database tables if needed
-        // global $wpdb;
+    private static function createDatabaseTables(): void
+    {
+        Events\EventStore::createTable();
     }
 
     private static function setDefaultOptions(): void {

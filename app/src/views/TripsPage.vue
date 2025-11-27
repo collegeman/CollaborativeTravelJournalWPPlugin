@@ -67,15 +67,26 @@ import {
   alertController
 } from '@ionic/vue';
 import { locationOutline, peopleOutline, trashOutline } from 'ionicons/icons';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCurrentTrip, type Trip } from '../composables/useCurrentTrip';
 import { useAlerts } from '../composables/useAlerts';
-import { deleteTrip as deleteTripApi } from '../services/trips';
+import { deleteTrip as deleteTripApi, getTrips } from '../services/trips';
 import TripSettingsModal from '../components/TripSettingsModal.vue';
 
 const router = useRouter();
 const { currentTrip, trips, setCurrentTrip, setTrips } = useCurrentTrip();
+
+onMounted(async () => {
+  if (trips.value.length === 0) {
+    try {
+      const fetchedTrips = await getTrips();
+      setTrips(fetchedTrips);
+    } catch (e) {
+      console.error('Error fetching trips:', e);
+    }
+  }
+});
 const { showError } = useAlerts();
 const settingsOpen = ref(false);
 
