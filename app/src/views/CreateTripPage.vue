@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
-        <ion-title>Create Trip</ion-title>
+        <ion-title>Create New Trip</ion-title>
         <ion-buttons slot="end">
           <ion-button @click="handleCancel" :disabled="creating">
             <ion-icon slot="icon-only" :icon="close"></ion-icon>
@@ -16,8 +16,8 @@
         <div class="icon-container">
           <ion-icon :icon="locationOutline" class="page-icon"></ion-icon>
         </div>
-        <h1>Start Here.</h1>
-        <p>Create a trip to begin documenting your travels.</p>
+        <h1>Create New Trip</h1>
+        <p>Start documenting a new adventure.</p>
 
         <form @submit.prevent="handleSubmit">
           <ion-list>
@@ -118,8 +118,8 @@ async function handleSubmit() {
     // Set the new trip as current
     setCurrentTrip(newTrip);
 
-    // Redirect to feed page
-    router.push('/tabs/feed');
+    // Redirect to timeline page
+    router.push('/tabs/timeline');
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to create trip';
     console.error('Error creating trip:', e);

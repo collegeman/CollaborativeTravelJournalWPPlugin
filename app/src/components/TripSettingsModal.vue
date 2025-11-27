@@ -409,7 +409,7 @@ async function deleteTrip() {
 
     if (updatedTrips.length > 0) {
       setCurrentTrip(updatedTrips[0]);
-      router.push('/tabs/feed');
+      router.push('/tabs/timeline');
     } else {
       setCurrentTrip(null);
       router.push('/trip/create');

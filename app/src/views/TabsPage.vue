@@ -4,9 +4,9 @@
     <ion-tabs>
       <ion-router-outlet id="main-content"></ion-router-outlet>
       <ion-tab-bar slot="bottom">
-        <ion-tab-button tab="feed" href="/tabs/feed">
-          <ion-icon :icon="newspaper"></ion-icon>
-          <ion-label>Feed</ion-label>
+        <ion-tab-button tab="timeline" href="/tabs/timeline">
+          <ion-icon :icon="menu"></ion-icon>
+          <ion-label>Timeline</ion-label>
         </ion-tab-button>
 
         <ion-tab-button tab="media" href="/tabs/media">
@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import { IonPage, IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonRouterOutlet } from '@ionic/vue';
-import { newspaper, images, map, musicalNotes, person } from 'ionicons/icons';
+import { menu, images, map, musicalNotes, person } from 'ionicons/icons';
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import TripMenu from '../components/TripMenu.vue';

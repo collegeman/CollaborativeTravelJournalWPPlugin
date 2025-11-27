@@ -91,6 +91,7 @@ async function initMap() {
       center: center,
       zoom: zoom,
       disableDefaultUI: true,
+      keyboardShortcuts: false,
       mapTypeControl: true,
       mapTypeControlOptions: {
         style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,

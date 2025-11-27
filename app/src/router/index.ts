@@ -6,7 +6,7 @@ import CreateTripPage from '../views/CreateTripPage.vue'
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    redirect: '/tabs/feed'
+    redirect: '/tabs/timeline'
   },
   {
     path: '/tabs/',
@@ -14,11 +14,11 @@ const routes: Array<RouteRecordRaw> = [
     children: [
       {
         path: '',
-        redirect: '/tabs/feed'
+        redirect: '/tabs/timeline'
       },
       {
-        path: 'feed',
-        component: () => import('../views/FeedPage.vue')
+        path: 'timeline',
+        component: () => import('../views/TimelinePage.vue')
       },
       {
         path: 'media',

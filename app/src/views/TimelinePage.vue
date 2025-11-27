@@ -8,7 +8,7 @@
         <ion-title v-if="currentTrip">
           {{ currentTrip.title.rendered }}
         </ion-title>
-        <ion-title v-else>Feed</ion-title>
+        <ion-title v-else>Timeline</ion-title>
         <ion-buttons slot="end">
           <ion-button @click="openFilter">
             <ion-icon slot="icon-only" :icon="filterOutline"></ion-icon>

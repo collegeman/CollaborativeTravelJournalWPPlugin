@@ -105,7 +105,7 @@ function isCurrentTrip(trip: Trip): boolean {
 function selectTrip(trip: Trip) {
   setCurrentTrip(trip);
   menuController.close();
-  router.push('/tabs/feed');
+  router.push('/tabs/timeline');
 }
 
 function createNewTrip() {

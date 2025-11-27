@@ -3,13 +3,16 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button default-href="/tabs/feed"></ion-back-button>
+          <ion-back-button default-href="/tabs/timeline"></ion-back-button>
         </ion-buttons>
         <ion-title>Trips</ion-title>
       </ion-toolbar>
     </ion-header>
 
     <ion-content>
+      <div class="ion-padding">
+        <h1>Trips</h1>
+      </div>
       <ion-list>
         <ion-item-sliding v-for="trip in trips" :key="trip.id">
           <ion-item button :detail="false" @click="openTripSettings(trip)">
