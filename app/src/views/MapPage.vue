@@ -30,7 +30,13 @@
       @add-collaborator="addCollaborator"
     />
 
-    <CreateStopModal :is-open="createStopOpen" @close="closeCreateStop" />
+    <StopModal
+      :is-open="stopModalOpen"
+      :stop="null"
+      @close="closeStopModal"
+      @saved="handleStopSaved"
+      @deleted="handleStopDeleted"
+    />
   </ion-page>
 </template>
 
@@ -46,11 +52,11 @@ import {
 } from '@ionic/vue';
 import { ref, onMounted, watch, nextTick } from 'vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
-import CreateStopModal from '../components/CreateStopModal.vue';
+import StopModal from '../components/StopModal.vue';
 import ActionFab from '../components/ActionFab.vue';
 
 const { currentTrip } = useCurrentTrip();
-const createStopOpen = ref(false);
+const stopModalOpen = ref(false);
 const mapElement = ref<HTMLElement | null>(null);
 let map: google.maps.Map | null = null;
 let googleMapsLoaded = false;
@@ -168,11 +174,19 @@ function addMedia() {
 }
 
 function addStop() {
-  createStopOpen.value = true;
+  stopModalOpen.value = true;
 }
 
-function closeCreateStop() {
-  createStopOpen.value = false;
+function closeStopModal() {
+  stopModalOpen.value = false;
+}
+
+function handleStopSaved() {
+  // TODO: Refresh map markers when stops are added
+}
+
+function handleStopDeleted() {
+  // TODO: Refresh map markers when stops are deleted
 }
 
 function addSong() {
