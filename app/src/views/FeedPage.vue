@@ -9,6 +9,21 @@
           {{ currentTrip.title.rendered }}
         </ion-title>
         <ion-title v-else>Feed</ion-title>
+        <ion-buttons slot="end">
+          <ion-button @click="openFilter">
+            <ion-icon slot="icon-only" :icon="filterOutline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+      <ion-toolbar>
+        <ion-segment v-model="feedView">
+          <ion-segment-button value="live">
+            <ion-label>Live</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="plan">
+            <ion-label>Plan</ion-label>
+          </ion-segment-button>
+        </ion-segment>
       </ion-toolbar>
     </ion-header>
 
@@ -28,15 +43,69 @@
         </div>
 
         <template v-else>
-          <ion-card v-for="stop in stops" :key="stop.id" class="stop-card">
-            <ion-card-header>
-              <ion-card-title>{{ stop.title.rendered }}</ion-card-title>
-              <ion-card-subtitle>{{ formatDate(stop.meta.date, stop.meta.time, stop.meta.specify_time, stop.meta.timezone) }}</ion-card-subtitle>
-            </ion-card-header>
-            <ion-card-content v-if="stop.meta.formatted_address">
-              {{ stop.meta.formatted_address }}
-            </ion-card-content>
-          </ion-card>
+          <div v-if="feedView === 'plan'">
+            <div
+              v-for="stop in stops"
+              :key="stop.id"
+              class="stop-card"
+              @click="editStop(stop)"
+            >
+              <div class="stop-header">
+                <div class="stop-icon">
+                  <ion-icon :icon="locationOutline"></ion-icon>
+                </div>
+                <div class="stop-info">
+                  <div class="stop-title">{{ stop.title.rendered }}</div>
+                  <div class="stop-meta">
+                    <span class="meta-item">
+                      <ion-icon :icon="timeOutline"></ion-icon>
+                      {{ formatDateCompact(stop.meta.date) }}
+                    </span>
+                    <span class="meta-item">
+                      <ion-icon :icon="peopleOutline"></ion-icon>
+                      2 contributors
+                    </span>
+                  </div>
+                </div>
+                <div class="stop-actions">
+                  <div class="contributor-avatars">
+                    <div class="avatar"></div>
+                    <div class="avatar"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <template v-else>
+            <div v-for="stop in stops" :key="stop.id" class="stop-card">
+              <div class="stop-header">
+                <div class="stop-icon">
+                  <ion-icon :icon="locationOutline"></ion-icon>
+                </div>
+                <div class="stop-info">
+                  <div class="stop-title">{{ stop.title.rendered }}</div>
+                  <div class="stop-meta">
+                    <span class="meta-item">
+                      <ion-icon :icon="timeOutline"></ion-icon>
+                      {{ formatDateCompact(stop.meta.date) }}
+                    </span>
+                    <span class="meta-item">
+                      <ion-icon :icon="peopleOutline"></ion-icon>
+                      2 contributors
+                    </span>
+                  </div>
+                </div>
+                <div class="stop-actions">
+                  <div class="contributor-avatars">
+                    <div class="avatar"></div>
+                    <div class="avatar"></div>
+                  </div>
+                  <ion-icon :icon="chevronUpOutline" class="expand-icon"></ion-icon>
+                </div>
+              </div>
+            </div>
+          </template>
 
           <div v-if="stops.length === 0" class="no-stops">
             <p>No stops yet. Add your first stop to begin your journey!</p>
@@ -54,7 +123,13 @@
       @add-collaborator="addCollaborator"
     />
 
-    <CreateStopModal :is-open="createStopOpen" @close="closeCreateStop" @stop-created="handleStopCreated" />
+    <StopModal
+      :is-open="stopModalOpen"
+      :stop="selectedStop"
+      @close="closeStopModal"
+      @saved="handleStopSaved"
+      @deleted="handleStopDeleted"
+    />
   </ion-page>
 </template>
 
@@ -68,21 +143,23 @@ import {
   IonButtons,
   IonButton,
   IonMenuButton,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardSubtitle,
-  IonCardContent,
-  IonSpinner
+  IonIcon,
+  IonSpinner,
+  IonSegment,
+  IonSegmentButton,
+  IonLabel
 } from '@ionic/vue';
+import { locationOutline, timeOutline, peopleOutline, chevronUpOutline, filterOutline } from 'ionicons/icons';
 import { ref, watch, onMounted } from 'vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
-import CreateStopModal from '../components/CreateStopModal.vue';
+import StopModal from '../components/StopModal.vue';
 import ActionFab from '../components/ActionFab.vue';
 import { getStopsByTrip, type Stop as ApiStop } from '../services/stops';
 
 const { currentTrip } = useCurrentTrip();
-const createStopOpen = ref(false);
+const feedView = ref<'live' | 'plan'>('plan');
+const stopModalOpen = ref(false);
+const selectedStop = ref<ApiStop | null>(null);
 const stops = ref<ApiStop[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
@@ -103,6 +180,14 @@ async function loadStops() {
   } finally {
     loading.value = false;
   }
+}
+
+// Compact date format for card header (e.g., "Nov 9")
+function formatDateCompact(dateString: string): string {
+  const [, month, day] = dateString.split('-').map(Number);
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${monthNames[month - 1]} ${day}`;
 }
 
 // Format date/time for display WITHOUT any timezone conversion
@@ -176,14 +261,20 @@ function addMedia() {
 }
 
 function addStop() {
-  createStopOpen.value = true;
+  selectedStop.value = null;
+  stopModalOpen.value = true;
 }
 
-function closeCreateStop() {
-  createStopOpen.value = false;
+function closeStopModal() {
+  stopModalOpen.value = false;
+  selectedStop.value = null;
 }
 
-function handleStopCreated() {
+function handleStopSaved() {
+  loadStops();
+}
+
+function handleStopDeleted() {
   loadStops();
 }
 
@@ -196,12 +287,41 @@ function addCollaborator() {
   console.log('Add collaborator');
   // TODO: Open collaborator invite
 }
+
+function openFilter() {
+  console.log('Open filter');
+  // TODO: Open filter modal/popover
+}
+
+function editStop(stop: ApiStop) {
+  selectedStop.value = stop;
+  stopModalOpen.value = true;
+}
+
 </script>
 
 <style scoped>
 ion-toolbar {
   --background: var(--ion-color-primary);
   --color: white;
+}
+
+ion-segment {
+  --background: transparent;
+}
+
+ion-segment-button {
+  --background: transparent;
+  --background-checked: rgba(0, 0, 0, 0.2);
+  --color: rgba(255, 255, 255, 0.7);
+  --color-checked: white;
+  --indicator-color: transparent;
+  --border-radius: 8px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  min-width: 80px;
+  text-transform: none;
+  font-weight: 500;
 }
 
 ion-toolbar ion-button {
@@ -225,12 +345,98 @@ ion-content {
 }
 
 .stop-card {
-  margin: 0 0 16px 0;
+  cursor: pointer;
+  background: white;
   border-radius: 0;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .stop-card:last-of-type {
-  margin-bottom: 80px; /* Add space for FAB */
+  margin-bottom: 80px;
+}
+
+.stop-header {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  gap: 12px;
+  background: linear-gradient(to right, #fbf0eb, #fdf9f0);
+}
+
+.stop-icon {
+  width: 48px;
+  height: 48px;
+  background: #c4703c;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stop-icon ion-icon {
+  font-size: 24px;
+  color: white;
+}
+
+.stop-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.stop-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.stop-meta {
+  display: flex;
+  gap: 16px;
+  color: #666;
+  font-size: 13px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.meta-item ion-icon {
+  font-size: 14px;
+  color: #888;
+}
+
+.stop-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.contributor-avatars {
+  display: flex;
+}
+
+.contributor-avatars .avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 2px solid white;
+  margin-left: -8px;
+}
+
+.contributor-avatars .avatar:first-child {
+  margin-left: 0;
+}
+
+.expand-icon {
+  font-size: 20px;
+  color: #999;
 }
 
 .no-stops {

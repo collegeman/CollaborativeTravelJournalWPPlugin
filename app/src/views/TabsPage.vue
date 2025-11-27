@@ -6,22 +6,27 @@
       <ion-tab-bar slot="bottom">
         <ion-tab-button tab="feed" href="/tabs/feed">
           <ion-icon :icon="newspaper"></ion-icon>
+          <ion-label>Feed</ion-label>
         </ion-tab-button>
 
         <ion-tab-button tab="media" href="/tabs/media">
           <ion-icon :icon="images"></ion-icon>
+          <ion-label>Media</ion-label>
         </ion-tab-button>
 
         <ion-tab-button tab="map" href="/tabs/map">
           <ion-icon :icon="map"></ion-icon>
+          <ion-label>Map</ion-label>
         </ion-tab-button>
 
         <ion-tab-button tab="music" href="/tabs/music">
           <ion-icon :icon="musicalNotes"></ion-icon>
+          <ion-label>Music</ion-label>
         </ion-tab-button>
 
         <ion-tab-button tab="me" href="/tabs/me">
           <ion-icon :icon="person"></ion-icon>
+          <ion-label>Me</ion-label>
         </ion-tab-button>
       </ion-tab-bar>
     </ion-tabs>
@@ -29,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { IonPage, IonTabs, IonTabBar, IonTabButton, IonIcon, IonRouterOutlet } from '@ionic/vue';
+import { IonPage, IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonRouterOutlet } from '@ionic/vue';
 import { newspaper, images, map, musicalNotes, person } from 'ionicons/icons';
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';

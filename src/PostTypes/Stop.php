@@ -49,38 +49,47 @@ final class Stop {
             'trip_id' => [
                 'type' => 'integer',
                 'description' => 'Associated trip ID',
+                'sanitize_callback' => 'absint',
             ],
             'place_id' => [
                 'type' => 'string',
                 'description' => 'Google Place ID',
+                'sanitize_callback' => 'sanitize_text_field',
             ],
             'formatted_address' => [
                 'type' => 'string',
                 'description' => 'Formatted address',
+                'sanitize_callback' => 'sanitize_text_field',
             ],
             'latitude' => [
                 'type' => 'number',
                 'description' => 'Latitude coordinate',
+                'sanitize_callback' => fn($value) => (float) $value,
             ],
             'longitude' => [
                 'type' => 'number',
                 'description' => 'Longitude coordinate',
+                'sanitize_callback' => fn($value) => (float) $value,
             ],
             'date' => [
                 'type' => 'string',
-                'description' => 'Date of stop',
+                'description' => 'Date of stop (YYYY-MM-DD)',
+                'sanitize_callback' => 'sanitize_text_field',
             ],
             'time' => [
                 'type' => 'string',
                 'description' => 'Time of stop in HH:mm format',
+                'sanitize_callback' => 'sanitize_text_field',
             ],
             'timezone' => [
                 'type' => 'string',
                 'description' => 'Timezone identifier (e.g., America/New_York)',
+                'sanitize_callback' => 'sanitize_text_field',
             ],
             'specify_time' => [
                 'type' => 'boolean',
                 'description' => 'Whether time was explicitly specified by user',
+                'sanitize_callback' => 'rest_sanitize_boolean',
             ],
         ];
 
@@ -90,6 +99,10 @@ final class Stop {
                 'description' => $args['description'],
                 'single' => true,
                 'show_in_rest' => true,
+                'sanitize_callback' => $args['sanitize_callback'] ?? null,
+                'auth_callback' => function ($allowed, $meta_key, $post_id) {
+                    return current_user_can('edit_post', $post_id);
+                },
             ]);
         }
     }
