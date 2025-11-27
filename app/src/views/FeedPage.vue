@@ -175,7 +175,13 @@ async function loadStops() {
   try {
     loading.value = true;
     error.value = null;
-    stops.value = await getStopsByTrip(currentTrip.value.id);
+    const fetched = await getStopsByTrip(currentTrip.value.id);
+    // Sort by date (oldest first), then by time
+    stops.value = fetched.sort((a, b) => {
+      const dateCompare = a.meta.date.localeCompare(b.meta.date);
+      if (dateCompare !== 0) return dateCompare;
+      return (a.meta.time || '00:00').localeCompare(b.meta.time || '00:00');
+    });
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to load stops';
     console.error('Error loading stops:', e);
