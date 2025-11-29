@@ -119,8 +119,7 @@ function addMedia() {
   const input = document.createElement('input');
   input.type = 'file';
   input.multiple = true;
-  // Note: Intentionally permissive to allow HEIC and other formats that browsers may not recognize
-  input.accept = 'image/*,image/heic,image/heif,.heic,.heif,video/*,audio/*,*/*';
+  input.accept = 'image/*,video/*,audio/*';
 
   input.onchange = () => {
     if (input.files?.length && currentTrip.value) {

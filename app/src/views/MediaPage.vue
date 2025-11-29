@@ -65,7 +65,13 @@
             </div>
             <div class="card-info">
               <div class="card-title">{{ item.title.rendered }}</div>
-              <div class="card-meta">{{ getDisplayType(item) }}</div>
+              <div class="card-meta">
+                <span>{{ getDisplayType(item) }}</span>
+                <span v-if="getStopName(item)" class="card-stop">
+                  <ion-icon :icon="locationOutline"></ion-icon>
+                  {{ getStopName(item) }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -131,37 +137,35 @@ import {
   IonSegment,
   IonSegmentButton,
 } from '@ionic/vue';
-import { images, musicalNote, document, squareOutline, gridOutline } from 'ionicons/icons';
+import { images, musicalNote, document, squareOutline, gridOutline, locationOutline } from 'ionicons/icons';
 import MediaModal from '../components/MediaModal.vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
 import { useEventStream } from '../composables/useEventStream';
 import { useMediaModal } from '../composables/useMediaModal';
 import { getMediaByTrip, type MediaItem } from '../services/media';
+import { getStopsByTrip, type Stop } from '../services/stops';
 
 const { currentTrip } = useCurrentTrip();
 const { onMediaChange } = useEventStream();
 const { isOpen: modalIsOpen, editingMedia, openMediaModal, closeMediaModal, handleSaved, handleDeleted } = useMediaModal();
 
 const media = ref<MediaItem[]>([]);
+const stops = ref<Stop[]>([]);
 const loading = ref(false);
 const viewMode = ref<'card' | 'grid'>('card');
 
-function openMedia(item: MediaItem) {
-  openMediaModal(item, {
-    onSaved: () => loadMedia(currentTrip.value!.id),
-    onDeleted: () => loadMedia(currentTrip.value!.id),
-  });
+function getStopName(item: MediaItem): string | null {
+  const stopId = item.meta?.stop_id;
+  if (!stopId) return null;
+  const stop = stops.value.find((s) => s.id === stopId);
+  return stop?.title.rendered || null;
 }
 
-async function loadMedia(tripId: number) {
-  loading.value = true;
-  try {
-    media.value = await getMediaByTrip(tripId);
-  } catch (error) {
-    console.error('Failed to load media:', error);
-  } finally {
-    loading.value = false;
-  }
+function openMedia(item: MediaItem) {
+  openMediaModal(item, {
+    onSaved: () => loadData(currentTrip.value!.id),
+    onDeleted: () => loadData(currentTrip.value!.id),
+  });
 }
 
 function getThumbnailUrl(item: MediaItem): string {
@@ -184,13 +188,30 @@ function getDisplayType(item: MediaItem): 'image' | 'video' | 'audio' | 'file' {
   return 'file';
 }
 
+async function loadData(tripId: number) {
+  loading.value = true;
+  try {
+    const [mediaData, stopsData] = await Promise.all([
+      getMediaByTrip(tripId),
+      getStopsByTrip(tripId),
+    ]);
+    media.value = mediaData;
+    stops.value = stopsData;
+  } catch (error) {
+    console.error('Failed to load data:', error);
+  } finally {
+    loading.value = false;
+  }
+}
+
 watch(
   currentTrip,
   (trip) => {
     if (trip) {
-      loadMedia(trip.id);
+      loadData(trip.id);
     } else {
       media.value = [];
+      stops.value = [];
     }
   },
   { immediate: true }
@@ -198,7 +219,7 @@ watch(
 
 onMediaChange(() => {
   if (currentTrip.value) {
-    loadMedia(currentTrip.value.id);
+    loadData(currentTrip.value.id);
   }
 });
 </script>
@@ -315,10 +336,23 @@ ion-content {
 }
 
 .card-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-size: 13px;
   color: var(--ion-color-medium);
   margin-top: 4px;
   text-transform: capitalize;
+}
+
+.card-stop {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.card-stop ion-icon {
+  font-size: 14px;
 }
 
 /* Grid View */

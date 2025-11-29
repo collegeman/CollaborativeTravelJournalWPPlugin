@@ -5,6 +5,7 @@ interface QueueItem {
   id: string;
   file: File;
   tripId: number;
+  stopId?: number;
   status: 'pending' | 'uploading' | 'completed' | 'failed';
   progress: number;
   error?: string;
@@ -34,11 +35,12 @@ export function useMediaUpload() {
 
   const pendingCount = computed(() => queue.value.filter((item) => item.status === 'pending').length);
 
-  function addFiles(files: FileList, tripId: number): void {
+  function addFiles(files: FileList, tripId: number, stopId?: number): void {
     const newItems: QueueItem[] = Array.from(files).map((file) => ({
       id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       file,
       tripId,
+      stopId,
       status: 'pending',
       progress: 0,
     }));
@@ -59,8 +61,12 @@ export function useMediaUpload() {
       nextItem.status = 'uploading';
 
       try {
-        await uploadMedia(nextItem.file, nextItem.tripId, (progress: UploadProgress) => {
-          nextItem.progress = progress.percent;
+        await uploadMedia(nextItem.file, {
+          tripId: nextItem.tripId,
+          stopId: nextItem.stopId,
+          onProgress: (progress: UploadProgress) => {
+            nextItem.progress = progress.percent;
+          },
         });
         nextItem.status = 'completed';
         nextItem.progress = 100;

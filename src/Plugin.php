@@ -31,6 +31,7 @@ final class Plugin {
         add_action('init', [$this, 'onInit']);
         Routes::register();
         Rest\CollaboratorsController::register();
+        Rest\MediaController::register();
         Events\EventDispatcher::register();
         Events\SSEController::register();
         Media::register();

@@ -25,9 +25,11 @@ export interface MediaItem {
     };
   };
   meta?: {
-    latitude?: number;
-    longitude?: number;
-    captured_at?: string;
+    trip_id?: number;
+    stop_id?: number | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    captured_at?: string | null;
   };
 }
 
@@ -43,19 +45,23 @@ export function deleteMedia(mediaId: number): Promise<void> {
   return apiDelete(`/media/${mediaId}`);
 }
 
-export function uploadMedia(
-  file: File,
-  tripId: number,
-  onProgress?: (progress: UploadProgress) => void
-): Promise<MediaItem> {
+export interface UploadOptions {
+  tripId: number;
+  stopId?: number;
+  onProgress?: (progress: UploadProgress) => void;
+}
+
+export function uploadMedia(file: File, options: UploadOptions): Promise<MediaItem> {
+  const { tripId, stopId, onProgress } = options;
+
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     const formData = new FormData();
 
     formData.append('file', file);
-    formData.append('title', file.name);
-    formData.append('post', tripId.toString());
-    formData.append('meta[trip_id]', tripId.toString());
+    if (stopId) {
+      formData.append('stop_id', stopId.toString());
+    }
 
     xhr.upload.addEventListener('progress', (event) => {
       if (event.lengthComputable && onProgress) {
@@ -93,7 +99,7 @@ export function uploadMedia(
       reject(new Error('Upload cancelled'));
     });
 
-    xhr.open('POST', '/wp-json/wp/v2/media');
+    xhr.open('POST', `/wp-json/ctj/v1/trips/${tripId}/media`);
 
     const wpNonce = (window as unknown as { WP_NONCE?: string }).WP_NONCE;
     if (wpNonce) {

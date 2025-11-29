@@ -11,45 +11,22 @@ final class Media
         add_filter('wp_read_image_metadata', [self::class, 'addGpsToImageMetadata'], 10, 5);
         add_filter('wp_generate_attachment_metadata', [self::class, 'extractGpsOnUpload'], 10, 3);
         add_action('rest_api_init', [self::class, 'registerRestFields']);
-        add_filter('upload_mimes', [self::class, 'allowHeicUploads']);
-        add_filter('wp_check_filetype_and_ext', [self::class, 'fixHeicFiletype'], 10, 5);
-    }
-
-    /**
-     * Allow HEIC/HEIF uploads
-     */
-    public static function allowHeicUploads(array $mimes): array
-    {
-        $mimes['heic'] = 'image/heic';
-        $mimes['heif'] = 'image/heif';
-        return $mimes;
-    }
-
-    /**
-     * Fix HEIC filetype detection (WordPress doesn't recognize it by default)
-     */
-    public static function fixHeicFiletype(array $data, string $file, string $filename, ?array $mimes, string $realMime): array
-    {
-        if (!empty($data['ext']) && !empty($data['type'])) {
-            return $data;
-        }
-
-        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-        if ($ext === 'heic') {
-            $data['ext'] = 'heic';
-            $data['type'] = 'image/heic';
-            $data['proper_filename'] = $filename;
-        } elseif ($ext === 'heif') {
-            $data['ext'] = 'heif';
-            $data['type'] = 'image/heif';
-            $data['proper_filename'] = $filename;
-        }
-
-        return $data;
     }
 
     public static function registerRestFields(): void
     {
+        register_post_meta('attachment', 'trip_id', [
+            'type' => 'integer',
+            'single' => true,
+            'show_in_rest' => true,
+        ]);
+
+        register_post_meta('attachment', 'stop_id', [
+            'type' => 'integer',
+            'single' => true,
+            'show_in_rest' => true,
+        ]);
+
         register_post_meta('attachment', 'latitude', [
             'type' => 'number',
             'single' => true,
