@@ -13,6 +13,7 @@ interface QueueItem {
 
 const queue = ref<QueueItem[]>([]);
 const isProcessing = ref(false);
+const lastUploadedMedia = ref<MediaItem | null>(null);
 
 export function useMediaUpload() {
   const isUploading = computed(() => queue.value.some((item) => item.status === 'uploading'));
@@ -61,7 +62,7 @@ export function useMediaUpload() {
       nextItem.status = 'uploading';
 
       try {
-        await uploadMedia(nextItem.file, {
+        const uploaded = await uploadMedia(nextItem.file, {
           tripId: nextItem.tripId,
           stopId: nextItem.stopId,
           onProgress: (progress: UploadProgress) => {
@@ -70,6 +71,7 @@ export function useMediaUpload() {
         });
         nextItem.status = 'completed';
         nextItem.progress = 100;
+        lastUploadedMedia.value = uploaded;
       } catch (error) {
         nextItem.status = 'failed';
         nextItem.error = error instanceof Error ? error.message : 'Upload failed';
@@ -94,6 +96,7 @@ export function useMediaUpload() {
     isUploading,
     overallProgress,
     pendingCount,
+    lastUploadedMedia,
     addFiles,
     clearQueue,
   };

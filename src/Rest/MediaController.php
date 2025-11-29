@@ -115,6 +115,16 @@ final class MediaController
         $attachmentData = wp_generate_attachment_metadata($attachmentId, $uploadedFile['file']);
         wp_update_attachment_metadata($attachmentId, $attachmentData);
 
+        // Set post_date from EXIF capture date if available
+        $capturedAt = get_post_meta($attachmentId, 'captured_at', true);
+        if ($capturedAt) {
+            wp_update_post([
+                'ID' => $attachmentId,
+                'post_date' => $capturedAt,
+                'post_date_gmt' => get_gmt_from_date($capturedAt),
+            ]);
+        }
+
         // Store trip_id in meta
         update_post_meta($attachmentId, 'trip_id', $tripId);
 
@@ -218,6 +228,7 @@ final class MediaController
 
         $response = [
             'id' => $attachmentId,
+            'date' => get_the_date('c', $attachment),
             'title' => ['rendered' => $attachment->post_title],
             'source_url' => wp_get_attachment_url($attachmentId),
             'mime_type' => $attachment->post_mime_type,

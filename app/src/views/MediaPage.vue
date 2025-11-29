@@ -142,12 +142,14 @@ import MediaModal from '../components/MediaModal.vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
 import { useEventStream } from '../composables/useEventStream';
 import { useMediaModal } from '../composables/useMediaModal';
+import { useMediaUpload } from '../composables/useMediaUpload';
 import { getMediaByTrip, type MediaItem } from '../services/media';
 import { getStopsByTrip, type Stop } from '../services/stops';
 
 const { currentTrip } = useCurrentTrip();
 const { onMediaChange } = useEventStream();
 const { isOpen: modalIsOpen, editingMedia, openMediaModal, closeMediaModal, handleSaved, handleDeleted } = useMediaModal();
+const { lastUploadedMedia } = useMediaUpload();
 
 const media = ref<MediaItem[]>([]);
 const stops = ref<Stop[]>([]);
@@ -220,6 +222,23 @@ watch(
 onMediaChange(() => {
   if (currentTrip.value) {
     loadData(currentTrip.value.id);
+  }
+});
+
+watch(lastUploadedMedia, (uploaded) => {
+  if (uploaded && currentTrip.value && Number(uploaded.meta?.trip_id) === currentTrip.value.id) {
+    // Insert in sorted position (newest first by date)
+    const uploadedDate = new Date(uploaded.date).getTime();
+    const insertIndex = media.value.findIndex((item) => new Date(item.date).getTime() < uploadedDate);
+    if (insertIndex === -1) {
+      media.value = [...media.value, uploaded];
+    } else {
+      media.value = [
+        ...media.value.slice(0, insertIndex),
+        uploaded,
+        ...media.value.slice(insertIndex),
+      ];
+    }
   }
 });
 </script>

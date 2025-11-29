@@ -8,6 +8,7 @@ export interface UploadProgress {
 
 export interface MediaItem {
   id: number;
+  date: string;
   source_url: string;
   mime_type: string;
   title: { rendered: string };
@@ -34,7 +35,7 @@ export interface MediaItem {
 }
 
 export function getMediaByTrip(tripId: number): Promise<MediaItem[]> {
-  return apiGet<MediaItem[]>(`/media?parent=${tripId}&per_page=100`);
+  return apiGet<MediaItem[]>(`/media?parent=${tripId}&per_page=100&orderby=date&order=desc`);
 }
 
 export function updateMedia(mediaId: number, data: { title?: string; caption?: string }): Promise<MediaItem> {
