@@ -107,8 +107,10 @@
             </div>
           </template>
 
-          <div v-if="stops.length === 0 && !fabIsOpen" class="no-stops">
-            <p>Tap + to add your first stop</p>
+          <div v-if="stops.length === 0" class="empty-state">
+            <ion-icon :icon="locationOutline" class="empty-icon"></ion-icon>
+            <p>No stops yet</p>
+            <p class="hint">Tap the + button to add your first stop</p>
           </div>
         </template>
       </div>
@@ -138,13 +140,11 @@ import { ref, watch, onMounted } from 'vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
 import { useStopModal } from '../composables/useStopModal';
 import { useEventStream } from '../composables/useEventStream';
-import { useFab } from '../composables/useFab';
 import { getStopsByTrip, type Stop as ApiStop } from '../services/stops';
 
 const { currentTrip } = useCurrentTrip();
 const { openStopModal, onStopSaved, onStopDeleted } = useStopModal();
 const { onStopChange } = useEventStream();
-const { isOpen: fabIsOpen } = useFab();
 const feedView = ref<'live' | 'plan'>('plan');
 const stops = ref<ApiStop[]>([]);
 const loading = ref(false);
@@ -394,17 +394,25 @@ ion-content {
   color: #999;
 }
 
-.no-stops {
-  position: absolute;
-  bottom: 160px;
-  right: 24px;
-  text-align: right;
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 250px);
+  color: var(--ion-color-medium);
+  text-align: center;
+  padding: 20px;
 }
 
-.no-stops p {
-  margin: 0;
-  color: var(--ion-color-medium);
-  font-size: 15px;
-  font-weight: 500;
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.hint {
+  font-size: 14px;
+  opacity: 0.7;
 }
 </style>

@@ -59,11 +59,13 @@ import StopModal from '../components/StopModal.vue';
 import ActionFab from '../components/ActionFab.vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
 import { useStopModal } from '../composables/useStopModal';
+import { useFab } from '../composables/useFab';
 import { getTrips } from '../services/trips';
 
 const router = useRouter();
 const { currentTrip, trips, setCurrentTrip, setTrips, restoreSavedTrip } = useCurrentTrip();
 const { isOpen, editingStop, closeStopModal, handleSaved, handleDeleted } = useStopModal();
+const { addFiles } = useFab();
 
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -112,8 +114,21 @@ function addEntry() {
 }
 
 function addMedia() {
-  console.log('Add media');
-  // TODO: Open media picker
+  if (!currentTrip.value) return;
+
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.multiple = true;
+  // Note: Intentionally permissive to allow HEIC and other formats that browsers may not recognize
+  input.accept = 'image/*,image/heic,image/heif,.heic,.heif,video/*,audio/*,*/*';
+
+  input.onchange = () => {
+    if (input.files?.length && currentTrip.value) {
+      addFiles(input.files, currentTrip.value.id);
+    }
+  };
+
+  input.click();
 }
 
 function addSong() {

@@ -7,9 +7,29 @@
     :activated="isOpen"
     @click="setOpen(!isOpen)"
   >
-    <ion-fab-button>
-      <ion-icon :icon="add"></ion-icon>
-    </ion-fab-button>
+    <div class="fab-button-container">
+      <svg
+        v-if="isUploading"
+        class="progress-ring"
+        width="72"
+        height="72"
+      >
+        <circle
+          class="progress-ring__circle"
+          stroke="var(--ion-color-primary)"
+          stroke-width="4"
+          fill="transparent"
+          r="32"
+          cx="36"
+          cy="36"
+          :stroke-dasharray="circumference"
+          :stroke-dashoffset="circumference - (overallProgress / 100) * circumference"
+        />
+      </svg>
+      <ion-fab-button>
+        <ion-icon :icon="add"></ion-icon>
+      </ion-fab-button>
+    </div>
     <ion-fab-list side="top">
       <ion-fab-button @click="$emit('add-collaborator')" color="light">
         <ion-icon :icon="person"></ion-icon>
@@ -49,7 +69,9 @@ defineEmits<{
 }>();
 
 const { openStopModal } = useStopModal();
-const { isOpen, setOpen } = useFab();
+const { isOpen, setOpen, isUploading, overallProgress } = useFab();
+
+const circumference = 2 * Math.PI * 32;
 
 function handleAddStop() {
   openStopModal(null);
@@ -66,5 +88,23 @@ ion-fab {
   ion-fab {
     bottom: calc(var(--ion-safe-area-bottom, 16px) + 16px);
   }
+}
+
+.fab-button-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-ring {
+  position: absolute;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+
+.progress-ring__circle {
+  transition: stroke-dashoffset 0.1s ease-out;
+  stroke-linecap: round;
 }
 </style>

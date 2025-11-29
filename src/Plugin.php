@@ -33,6 +33,7 @@ final class Plugin {
         Rest\CollaboratorsController::register();
         Events\EventDispatcher::register();
         Events\SSEController::register();
+        Media::register();
     }
 
     public function onInit(): void {
