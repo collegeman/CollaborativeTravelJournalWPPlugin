@@ -102,3 +102,8 @@ body.dark {
 	--ion-color-step-900: #ffe079;
 	--ion-color-step-950: #ffeb7f;
 }
+
+body.dark ion-datetime {
+	--background: #111111;
+	--background-rgb: 17,17,17;
+}
