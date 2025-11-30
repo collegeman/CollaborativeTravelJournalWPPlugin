@@ -44,9 +44,6 @@ const app = createApp(App)
 router.isReady().then(() => {
   app.mount('#app');
 
-  // Force dark mode for debugging (remove this line to follow system preference)
-  document.body.classList.add('dark');
-
   // Hide splash screen
   const splash = document.getElementById('ctj-splash');
   if (splash) {
