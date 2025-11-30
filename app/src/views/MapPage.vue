@@ -473,4 +473,17 @@ function updateMarkerSelection(stopId: number, isSelected: boolean) {
   color: var(--ion-color-medium);
   font-size: 14px;
 }
+
+body.dark .stop-modal-header ion-button {
+  --color: #ffffff;
+}
+
+body.dark .stop-modal-body h2 {
+  color: #ffffff;
+}
+
+body.dark .stop-address,
+body.dark .stop-date {
+  color: #cccccc;
+}
 </style>
