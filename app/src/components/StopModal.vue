@@ -141,8 +141,9 @@ import {
 import type { DatetimeCustomEvent } from '@ionic/vue';
 import { close, closeCircle, trashOutline } from 'ionicons/icons';
 import { ref, computed, watch, nextTick } from 'vue';
-import { createStop, updateStop, deleteStop, type Stop } from '../services/stops';
+import type { Stop } from '../services/stops';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
+import { useStops } from '../composables/useStops';
 import { loadGoogleMaps } from '../composables/useGoogleMaps';
 import { useAlerts } from '../composables/useAlerts';
 
@@ -158,6 +159,7 @@ const emit = defineEmits<{
 }>();
 
 const { currentTrip } = useCurrentTrip();
+const { createStop, updateStopById, deleteStopById } = useStops();
 const { confirmDelete: confirmDeleteAlert } = useAlerts();
 
 // Unique IDs for datetime pickers (to avoid conflicts if multiple modals)
@@ -327,12 +329,12 @@ async function confirmDelete() {
 }
 
 async function handleDelete() {
-  if (!props.stop) return;
+  if (!props.stop || !currentTrip.value) return;
 
   try {
     deleting.value = true;
     error.value = null;
-    await deleteStop(props.stop.id);
+    await deleteStopById(props.stop.id, currentTrip.value.id);
     emit('deleted');
     handleClose();
   } catch (e) {
@@ -370,7 +372,7 @@ async function handleSubmit() {
         updateData.longitude = selectedPlace.value.geometry?.location?.lng() || 0;
       }
 
-      await updateStop(props.stop.id, updateData);
+      await updateStopById(props.stop.id, currentTrip.value.id, updateData);
     } else if (selectedPlace.value) {
       // Create new stop
       const place = selectedPlace.value;

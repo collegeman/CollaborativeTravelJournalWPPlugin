@@ -136,52 +136,45 @@ import {
   IonLabel
 } from '@ionic/vue';
 import { locationOutline, timeOutline, peopleOutline, chevronUpOutline, filterOutline } from 'ionicons/icons';
-import { ref, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useCurrentTrip } from '../composables/useCurrentTrip';
 import { useStopModal } from '../composables/useStopModal';
 import { useEventStream } from '../composables/useEventStream';
-import { getStopsByTrip, type Stop as ApiStop } from '../services/stops';
+import { useStops } from '../composables/useStops';
+import type { Stop as ApiStop } from '../services/stops';
 
 const { currentTrip } = useCurrentTrip();
-const { openStopModal, onStopSaved, onStopDeleted } = useStopModal();
+const { openStopModal } = useStopModal();
 const { onStopChange } = useEventStream();
+const { loadStops: loadStopsToCache, getStopsForTrip, handleStopEvent } = useStops();
 const feedView = ref<'live' | 'plan'>('plan');
-const stops = ref<ApiStop[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
 
-// Subscribe to global stop events (handles FAB-triggered creates)
-onStopSaved(() => loadStops());
-onStopDeleted(() => loadStops());
+// Computed stops list from shared cache, sorted by date/time
+const stops = computed(() => {
+  if (!currentTrip.value) return [];
+  const tripStops = getStopsForTrip(currentTrip.value.id);
+  return [...tripStops].sort((a, b) => {
+    const dateCompare = a.meta.date.localeCompare(b.meta.date);
+    if (dateCompare !== 0) return dateCompare;
+    return (a.meta.time || '00:00').localeCompare(b.meta.time || '00:00');
+  });
+});
 
 // Subscribe to real-time stop events from other collaborators
-onStopChange((event) => {
-  console.log('Stop event received:', event.event_type, event.object_id);
-  if (event.event_type === 'stop.deleted') {
-    // Surgical removal for deletes
-    stops.value = stops.value.filter((s) => s.id !== event.object_id);
-  } else {
-    // Full reload for creates/updates
-    loadStops();
-  }
+onStopChange(async (event) => {
+  if (!currentTrip.value) return;
+  await handleStopEvent(event.event_type, event.object_id, currentTrip.value.id);
 });
 
 async function loadStops() {
-  if (!currentTrip.value) {
-    stops.value = [];
-    return;
-  }
+  if (!currentTrip.value) return;
 
   try {
     loading.value = true;
     error.value = null;
-    const fetched = await getStopsByTrip(currentTrip.value.id);
-    // Sort by date (oldest first), then by time
-    stops.value = fetched.sort((a, b) => {
-      const dateCompare = a.meta.date.localeCompare(b.meta.date);
-      if (dateCompare !== 0) return dateCompare;
-      return (a.meta.time || '00:00').localeCompare(b.meta.time || '00:00');
-    });
+    await loadStopsToCache(currentTrip.value.id);
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to load stops';
     console.error('Error loading stops:', e);
@@ -264,10 +257,7 @@ function openFilter() {
 }
 
 function editStop(stop: ApiStop) {
-  openStopModal(stop, {
-    onSaved: loadStops,
-    onDeleted: loadStops,
-  });
+  openStopModal(stop);
 }
 
 </script>

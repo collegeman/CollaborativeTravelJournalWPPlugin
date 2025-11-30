@@ -45,7 +45,7 @@ export async function loadGoogleMaps(): Promise<void> {
     };
 
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}&loading=async`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker&callback=${callbackName}&loading=async`;
 
     script.onerror = () => {
       delete (window as any)[callbackName];

@@ -35,6 +35,10 @@ export async function getStopsByTrip(tripId: number): Promise<Stop[]> {
   return apiGet<Stop[]>(`/stops?trip_id=${tripId}&per_page=100`);
 }
 
+export async function getStop(stopId: number): Promise<Stop> {
+  return apiGet<Stop>(`/stops/${stopId}`);
+}
+
 export async function createStop(stopData: StopData): Promise<Stop> {
   const payload = {
     title: stopData.name,

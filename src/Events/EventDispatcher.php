@@ -17,6 +17,12 @@ final class EventDispatcher
 
     public static function register(): void
     {
+        // REST API post events (fires after meta is saved)
+        foreach (array_keys(self::TRACKED_POST_TYPES) as $postType) {
+            add_action("rest_after_insert_{$postType}", [self::class, 'onRestInsertPost'], 10, 3);
+        }
+
+        // Delete events
         add_action('before_delete_post', [self::class, 'onDeletePost']);
         add_action('wp_trash_post', [self::class, 'onDeletePost']);
 
@@ -29,6 +35,31 @@ final class EventDispatcher
         if (!wp_next_scheduled('ctj_cleanup_events')) {
             wp_schedule_event(time(), 'hourly', 'ctj_cleanup_events');
         }
+    }
+
+    public static function onRestInsertPost(\WP_Post $post, \WP_REST_Request $request, bool $creating): void
+    {
+        if (!isset(self::TRACKED_POST_TYPES[$post->post_type])) {
+            return;
+        }
+
+        $objectType = self::TRACKED_POST_TYPES[$post->post_type];
+        $tripId = self::getTripIdForPost($post);
+
+        if (!$tripId) {
+            return;
+        }
+
+        $eventType = $creating ? "{$objectType}.created" : "{$objectType}.updated";
+
+        EventStore::recordEvent(
+            $tripId,
+            $eventType,
+            $objectType,
+            $post->ID,
+            get_current_user_id(),
+            ['title' => $post->post_title]
+        );
     }
 
     public static function onDeletePost(int $postId): void
