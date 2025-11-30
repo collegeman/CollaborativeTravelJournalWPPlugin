@@ -44,6 +44,14 @@ const app = createApp(App)
 router.isReady().then(() => {
   app.mount('#app');
 
+  // Auto-detect system dark mode preference
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+  const updateDarkMode = (e: MediaQueryList | MediaQueryListEvent) => {
+    document.body.classList.toggle('dark', e.matches);
+  };
+  updateDarkMode(prefersDark);
+  prefersDark.addEventListener('change', updateDarkMode);
+
   // Hide splash screen
   const splash = document.getElementById('ctj-splash');
   if (splash) {
