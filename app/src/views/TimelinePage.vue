@@ -285,6 +285,10 @@ ion-content {
   --background: #faf8f5;
 }
 
+body.dark ion-content {
+  --background: #1a0f0a;
+}
+
 .stops-list {
   padding: 16px 0;
 }
@@ -307,6 +311,26 @@ ion-content {
   padding: 16px;
   gap: 12px;
   background: linear-gradient(to right, #fbf0eb, #fdf9f0);
+}
+
+body.dark .stop-header {
+  background: linear-gradient(to right, #482b18, #4b3622);
+}
+
+body.dark .stop-title {
+  color: #ffffff;
+}
+
+body.dark .stop-meta {
+  color: #cccccc;
+}
+
+body.dark .meta-item ion-icon {
+  color: #aaaaaa;
+}
+
+body.dark .expand-icon {
+  color: #aaaaaa;
 }
 
 .stop-icon {

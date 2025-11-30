@@ -269,6 +269,10 @@ ion-content {
   --background: #faf8f5;
 }
 
+body.dark ion-content {
+  --background: #1a0f0a;
+}
+
 .media-container {
   height: 100%;
 }

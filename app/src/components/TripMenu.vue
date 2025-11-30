@@ -161,14 +161,10 @@ ion-searchbar {
   flex-shrink: 0;
 }
 
-.active-icon {
+.active-icon,
+.inactive-icon {
   background: var(--ion-color-primary);
   color: white;
-}
-
-.inactive-icon {
-  background: var(--ion-color-light);
-  color: var(--ion-color-medium);
 }
 
 .trip-icon ion-icon {
@@ -208,6 +204,14 @@ ion-searchbar {
 
 .selected-trip {
   --background: var(--ion-color-light-tint);
+}
+
+body.dark .selected-trip {
+  --background: #3c2a1b;
+}
+
+body.dark .trip-title {
+  color: #ffffff;
 }
 
 .loading-container {

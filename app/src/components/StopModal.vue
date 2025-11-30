@@ -436,10 +436,11 @@ ion-item {
   border: none;
   outline: none;
   background: transparent;
+  color: var(--ion-text-color);
 }
 
 .place-input:disabled {
-  color: var(--ion-color-dark);
+  color: var(--ion-text-color);
   opacity: 1;
 }
 

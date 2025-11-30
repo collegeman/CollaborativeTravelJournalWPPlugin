@@ -31,6 +31,10 @@ ion-header ion-toolbar ion-menu-button {
   height: 100%;
 }
 
+body.dark .empty-state {
+  color: #ffffff;
+}
+
 /* Loading state container */
 .loading-state {
   display: flex;
@@ -41,6 +45,10 @@ ion-header ion-toolbar ion-menu-button {
   text-align: center;
   color: var(--ion-color-medium);
   gap: 16px;
+}
+
+body.dark .loading-state {
+  color: #ffffff;
 }
 
 /* Error state container */
@@ -55,9 +63,17 @@ ion-header ion-toolbar ion-menu-button {
   gap: 16px;
 }
 
+body.dark .error-state {
+  color: #ffffff;
+}
+
 /* Common content background */
 ion-content.content-bg {
   --background: #faf8f5;
+}
+
+body.dark ion-content.content-bg {
+  --background: #1a0f0a;
 }
 
 /* Placeholder text */
