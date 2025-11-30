@@ -419,10 +419,18 @@ body.dark .expand-icon {
   padding: 20px;
 }
 
+body.dark .empty-state {
+  color: #ffffff;
+}
+
 .empty-icon {
   font-size: 64px;
   margin-bottom: 16px;
   opacity: 0.5;
+}
+
+body.dark .empty-icon {
+  opacity: 0.8;
 }
 
 .hint {
