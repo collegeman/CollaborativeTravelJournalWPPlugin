@@ -35,6 +35,7 @@ final class Plugin {
         Events\EventDispatcher::register();
         Events\SSEController::register();
         Media::register();
+        LoginCustomization::register();
     }
 
     public function onInit(): void {

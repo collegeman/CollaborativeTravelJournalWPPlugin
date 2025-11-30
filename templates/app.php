@@ -42,6 +42,44 @@ $wp_config = sprintf(
     wp_json_encode($app_path)
 );
 
+// Favicon and splash screen when CTJ_BRAND is enabled
+$favicon_tag = '';
+$splash_html = '';
+if (defined('CTJ_BRAND') && CTJ_BRAND) {
+    $favicon_url = plugins_url('app/src/images/journ-favicon.png', CTJ_PLUGIN_FILE);
+    $favicon_tag = '<link rel="icon" href="' . esc_url($favicon_url) . '" />';
+
+    $logo_url = plugins_url('app/src/images/journ-logo-reverse.svg', CTJ_PLUGIN_FILE);
+    $splash_html = '
+    <style>
+        #ctj-splash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #cb5a33;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            transition: opacity 0.3s ease-out;
+        }
+        #ctj-splash.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #ctj-splash img {
+            width: 180px;
+            max-width: 50%;
+            height: auto;
+        }
+    </style>
+    <div id="ctj-splash">
+        <img src="' . esc_url($logo_url) . '" alt="Journ" />
+    </div>';
+}
+
 if ($is_dev_mode) {
     // Serve from Vite dev server
     ?>
@@ -54,11 +92,13 @@ if ($is_dev_mode) {
         <meta name="msapplication-tap-highlight" content="no" />
         <title>Journ</title>
         <base href="/" />
+        <?php echo $favicon_tag; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
         <?php echo $wp_config; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
         <script type="module" src="<?php echo esc_url($dev_server_url); ?>/@vite/client"></script>
         <script type="module" src="<?php echo esc_url($dev_server_url); ?>/src/main.ts"></script>
     </head>
     <body>
+        <?php echo $splash_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
         <div id="app"></div>
     </body>
     </html>
@@ -90,8 +130,13 @@ if ($is_dev_mode) {
         $html
     );
 
-    // Insert the config script before </head>
-    $html = str_replace('</head>', $wp_config . '</head>', $html);
+    // Insert the favicon and config script before </head>
+    $html = str_replace('</head>', $favicon_tag . $wp_config . '</head>', $html);
+
+    // Insert splash screen after <body>
+    if ($splash_html) {
+        $html = preg_replace('/<body[^>]*>/', '$0' . $splash_html, $html, 1);
+    }
 
     // Output the HTML
     // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped

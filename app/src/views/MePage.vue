@@ -5,13 +5,16 @@
         <ion-buttons slot="start">
           <ion-menu-button></ion-menu-button>
         </ion-buttons>
-        <ion-title>Me</ion-title>
+        <ion-title>Profile</ion-title>
       </ion-toolbar>
     </ion-header>
 
     <ion-content :fullscreen="true" class="ion-padding">
-      <h1>Profile</h1>
-      <p class="placeholder">User profile and settings coming soon...</p>
+
+      <ion-button expand="block" color="medium" @click="signOut">
+        <ion-icon :icon="logOutOutline" slot="start"></ion-icon>
+        Sign Out
+      </ion-button>
     </ion-content>
   </ion-page>
 </template>
@@ -24,17 +27,31 @@ import {
   IonTitle,
   IonToolbar,
   IonButtons,
-  IonMenuButton
+  IonMenuButton,
+  IonButton,
+  IonIcon,
 } from '@ionic/vue';
+import { logOutOutline } from 'ionicons/icons';
+
+async function signOut() {
+  try {
+    const response = await fetch('/wp-json/ctj/v1/logout', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'X-WP-Nonce': (window as any).WP_NONCE || '',
+      },
+    });
+    const data = await response.json();
+    if (data.redirect) {
+      window.location.href = data.redirect;
+    }
+  } catch {
+    // Fallback to login page on error
+    window.location.href = '/wp-login.php';
+  }
+}
 </script>
 
 <style scoped>
-h1 {
-  margin-bottom: 20px;
-}
-
-.placeholder {
-  color: var(--ion-color-medium);
-  font-style: italic;
-}
 </style>

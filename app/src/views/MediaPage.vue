@@ -103,6 +103,11 @@
             <div v-else class="grid-placeholder file">
               <ion-icon :icon="document"></ion-icon>
             </div>
+            <ion-icon
+              v-if="item.meta?.stop_id"
+              :icon="locationOutline"
+              class="grid-stop-indicator"
+            ></ion-icon>
           </div>
         </div>
       </div>
@@ -383,10 +388,20 @@ ion-content {
 }
 
 .media-item {
+  position: relative;
   aspect-ratio: 1;
   overflow: hidden;
   background: var(--ion-color-light);
   cursor: pointer;
+}
+
+.grid-stop-indicator {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  font-size: 16px;
+  color: white;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
 }
 
 .media-item img,

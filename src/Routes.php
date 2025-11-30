@@ -10,6 +10,23 @@ final class Routes {
         add_action('init', [self::class, 'maybeFlushRules'], 99);
         add_filter('template_include', [self::class, 'handleTemplate']);
         add_filter('query_vars', [self::class, 'addQueryVars']);
+        add_action('rest_api_init', [self::class, 'registerRestRoutes']);
+    }
+
+    public static function registerRestRoutes(): void {
+        register_rest_route('ctj/v1', '/logout', [
+            'methods' => 'POST',
+            'callback' => [self::class, 'handleLogout'],
+            'permission_callback' => 'is_user_logged_in',
+        ]);
+    }
+
+    public static function handleLogout(): \WP_REST_Response {
+        wp_logout();
+        return new \WP_REST_Response([
+            'success' => true,
+            'redirect' => wp_login_url(self::getAppUrl()),
+        ]);
     }
 
     public static function maybeFlushRules(): void {

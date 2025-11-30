@@ -43,4 +43,13 @@ const app = createApp(App)
 
 router.isReady().then(() => {
   app.mount('#app');
+
+  // Hide splash screen
+  const splash = document.getElementById('ctj-splash');
+  if (splash) {
+    setTimeout(() => {
+      splash.classList.add('fade-out')
+      setTimeout(() => splash.remove(), 300)
+    }, 2000);
+  }
 });
